@@ -1,24 +1,30 @@
-import logo from './logo.svg';
-import './App.css';
+import React from 'react';
+import ReactDOM from 'react-dom';
+
+import NavigationBar from "./components/NavigationBar.react";
+import MidiView from "./components/MidiView.react";
+import TextPromptView from "./components/TextPromptView.react";
+
+import Container from 'react-bootstrap/Container';
+import Row from 'react-bootstrap/Row';
+
+
+
+
 
 function App() {
+  const arrWidth = 12
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <>
+      <NavigationBar />
+      <Container fluid className="p-5">
+        <Row>
+          <TextPromptView arrWidth={arrWidth} />
+          <MidiView arrWidth={arrWidth} />
+        </Row>
+      </Container>
+
+    </>
   );
 }
 
