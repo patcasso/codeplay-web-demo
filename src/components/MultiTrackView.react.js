@@ -3,11 +3,16 @@ import { useState, useEffect } from 'react';
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import Button from 'react-bootstrap/Button';
+import Soundfont from 'soundfont-player';
 
 import * as Tone from 'tone';
+import { instrumentObj } from '../utils/InstrumentList';
 
 const BEATS_PER_BAR = 4
 const NUM_BARS = 4
+
+// console.log(instrumentList);
+const ac = new AudioContext();
 
 const MultiTrackView = (props) => {
     const [midiFile, setMidiFile] = useState();
@@ -47,65 +52,43 @@ const MultiTrackView = (props) => {
         }
     })
 
+    // Midi Playing / Editing Functions
 
-    // Button Click Handlers
+    const playInstrument = () => {
+        const acTime = ac.currentTime;
+        console.log(acTime); // 현재 AudioContext가 시작되고 난 후의 시간
 
-    const handleClickPlay = () => {
-        setPlaying(prev => !prev);
-        playMidi();
-        // setCurrentTime(0);
+        midiFile && midiFile.tracks.forEach((track) => {
+            // const track = midiFile.tracks[2];
+            // console.log(instrumentObj[track.instrument.number]);
+            let inst = instrumentObj[track.instrument.number];
+            if (!inst) {
+                inst = "marimba"
+            }
+            const notes_arr = []
+            track.notes.forEach((note) => {
+                notes_arr.push({
+                    time: note.time,
+                    note: note.name,
+                    duration: note.duration
+                })
+            })
+            Soundfont.instrument(ac, inst).then(function (play) {
+                play.schedule(acTime + 0.5, notes_arr);
+            })
+        })
     }
 
-    const handleClickRewind = () => {
-        currentTime - msPerBeat > 0 &&
-            setCurrentTime(prev => prev - msPerBeat);
-    }
-
-    const handleClickForward = () => {
-        currentTime + msPerBeat < totalMs &&
-            setCurrentTime(prev => prev + msPerBeat);
-    }
-
-    const handleClickBeginning = () => {
-        setCurrentTime(0);
-    }
-
-    const handleClickEnd = () => {
-        setCurrentTime(totalMs);
-    }
-
-    const handleClickRemove = (trackNum) => {
-        removeTrack(trackNum);
-    }
-
-    const handleNoteStyle = (idx, time, duration, nextStartTime) => {
-        let marginLeft;
-        const currentTimeSec = currentTime / 1000;
-        const widthPercent = (nextStartTime - time) * 1000 / totalMs * 100
-
-        if (idx == 0 && time != 0) {
-            marginLeft = time * 1000 / totalMs * 100;
-        } else {
-            marginLeft = 0;
-        }
-
-        if (time < currentTimeSec && currentTimeSec <= nextStartTime) {
-            return { color: "red", padding: "0px", marginLeft: `${marginLeft}%`, width: `${widthPercent}%`, float: "left" }
-        } else {
-            return { color: "white", padding: "0px", marginLeft: `${marginLeft}%`, width: `${widthPercent}%`, float: "left" }
-        }
-    }
-
-    const handleProgressBar = () => {
-        return { color: "yellow", marginLeft: `${currentTime / totalMs * 100}%` }
+    // TODO : 정지 버튼 개발
+    const stopInstrument = () => {
+        console.log("Stop audio context");
+        ac.close();
     }
 
     const playMidi = () => {
         // const synths = [];
         if (!playing && midiFile) {
             const now = Tone.now();
-
-            // console.log(now);
 
             midiFile.tracks.forEach((track) => {
                 //create a synth for each track
@@ -140,12 +123,72 @@ const MultiTrackView = (props) => {
 
     const removeTrack = (trackNum) => {
         console.log(`Track ${trackNum} Removed`);
-        const newMidi = midiFile;
+        const newMidi = { ...midiFile }
         newMidi.tracks.splice(trackNum, 1);
         setMidiFile(newMidi);
-        // midiFile.tracks = midiFile.tracks[0];
     }
 
+
+    // Button Click Handlers
+
+    const handleClickPlay = () => {
+        setPlaying(prev => !prev);
+        playMidi();
+        // setCurrentTime(0);
+    }
+    const handleClickRewind = () => {
+        currentTime - msPerBeat > 0 &&
+            setCurrentTime(prev => prev - msPerBeat);
+    }
+
+    const handleClickForward = () => {
+        currentTime + msPerBeat < totalMs &&
+            setCurrentTime(prev => prev + msPerBeat);
+    }
+
+    const handleClickBeginning = () => {
+        setCurrentTime(0);
+    }
+
+    const handleClickEnd = () => {
+        setCurrentTime(totalMs);
+    }
+
+    const handleClickRemove = (trackNum) => {
+        removeTrack(trackNum);
+    }
+
+    const handleClickPlayInstrument = () => {
+        setPlaying(prev => !prev);
+        playInstrument();
+    }
+
+    const handleClickStopInstrument = () => {
+        setPlaying(prev => !prev);
+        stopInstrument();
+    }
+
+    const handleNoteStyle = (idx, time, duration, nextStartTime) => {
+        let marginLeft;
+        const currentTimeSec = currentTime / 1000;
+        const widthPercent = (nextStartTime - time) * 1000 / totalMs * 100
+
+        if (idx == 0 && time != 0) {
+            marginLeft = time * 1000 / totalMs * 100;
+        } else {
+            marginLeft = 0;
+        }
+
+        if (time < currentTimeSec && currentTimeSec <= nextStartTime) {
+            return { color: "red", padding: "0px", marginLeft: `${marginLeft}%`, width: `${widthPercent}%`, float: "left" }
+        } else {
+            return { color: "white", padding: "0px", marginLeft: `${marginLeft}%`, width: `${widthPercent}%`, float: "left" }
+        }
+    }
+
+    const handleProgressBar = () => {
+        return { color: "yellow", marginLeft: `${currentTime / totalMs * 100}%` }
+    }
 
 
     return (
@@ -186,6 +229,21 @@ const MultiTrackView = (props) => {
                         onClick={handleClickEnd}
                     >
                         ▶▶
+                    </Button>
+                    <Button
+                        className="mt-3 ms-2"
+                        variant="dark"
+                        onClick={handleClickPlayInstrument}
+                    >
+                        Play INST
+                    </Button>
+                    <Button
+                        // disabled
+                        className="mt-3 ms-2"
+                        variant="dark"
+                        onClick={handleClickStopInstrument}
+                    >
+                        Kill INST
                     </Button>
                 </Col>
             </Row>

@@ -4,12 +4,20 @@ import { useState } from "react";
 import Card from 'react-bootstrap/Card';
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col';
+import Button from "react-bootstrap/Button";
+import ButtonGroup from "react-bootstrap/ButtonGroup";
+import Dropdown from "react-bootstrap/Dropdown";
+import DropdownButton from "react-bootstrap/DropdownButton";
 
+import { bodyAndSoulJSON } from "../midi/body_n_soul_sample.js";
+import { twentiethJSON } from "../midi/twentieth_sample.js"
 
 import MultiTrackView from './MultiTrackView.react.js'
 
 
 import { Midi } from '@tonejs/midi'
+
+// const sampleMidis = {"body_n_soul" : bodyAndSoulJSON, ""}
 
 // Drag & Drop event handler
 const handleDragOver = (event) => {
@@ -37,7 +45,8 @@ const readFileAsArrayBuffer = (file) => {
 // Main component
 const MidiView = (props) => {
     const [midiFile, setMidiFile] = useState();
-    const [fileName, setFileName] = useState("Drag and drop MIDI file here")
+    const [fileName, setFileName] = useState("Drag and drop MIDI file here (4 Bars only!)")
+    const [sampleTitle, setSampleTitle] = useState("Sample MIDI");
 
     const handleFileDrop = async (event) => {
         event.preventDefault();
@@ -48,6 +57,7 @@ const MidiView = (props) => {
             try {
                 const arrayBuffer = await readFileAsArrayBuffer(file);
                 const midi = new Midi(arrayBuffer)
+                // console.log(arrayBuffer);
                 console.log(midi);
                 setMidiFile(midi);
                 setFileName(file.name);
@@ -58,8 +68,15 @@ const MidiView = (props) => {
         }
     };
 
+    // TODO : 샘플 미디 파일 로딩되게 하기
+    const handleClickLoad = async () => {
+        console.log("Midi file loaded");
+        // setMidiFile(bodyAndSoulJSON);
+        setMidiFile(twentiethJSON);
+    }
 
 
+    // console.log(JSON.stringify(midiFile));
 
     return (
         <Col xs={props.arrWidth}>
@@ -82,6 +99,37 @@ const MidiView = (props) => {
                     >
                         <p>{fileName}</p>
                     </div>
+                    <Row className="mt-2">
+                        <Col>
+                            <DropdownButton
+                                as={ButtonGroup}
+                                className="float-end"
+                                title={sampleTitle}
+                                variant="outline-dark"
+                            >
+                                <Dropdown.Item
+                                    as="button"
+                                    key="0"
+                                    onClick={() => {
+                                        setMidiFile(bodyAndSoulJSON);
+                                        setSampleTitle("Body N Soul");
+                                    }}
+                                >
+                                    <span>Body And Soul</span>
+                                </Dropdown.Item>
+                                <Dropdown.Item
+                                    as="button"
+                                    key="1"
+                                    onClick={() => {
+                                        setMidiFile(twentiethJSON);
+                                        setSampleTitle("20th Century Stomp");
+                                    }}
+                                >
+                                    <span>20th Century Stomp</span>
+                                </Dropdown.Item>
+                            </DropdownButton>
+                        </Col>
+                    </Row>
                     <MultiTrackView midiFile={midiFile} />
                     {/* <Row className="mt-2">
                         <h4>[MIDI json]</h4>
