@@ -6,6 +6,29 @@ import Col from 'react-bootstrap/Col';
 import InputGroup from 'react-bootstrap/InputGroup';
 import Button from 'react-bootstrap/Button';
 
+const sendGenerateRequest = (text) => {
+    fetch(
+      "http://0.0.0.0:8000/generate/",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+        //   "text": "BOS_None",
+          "text": text,
+        }),
+      }
+    )
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  };
+
 function TextPromptView(props) {
     return (
         <Col xs={12 - props.arrWidth}>
@@ -28,7 +51,8 @@ function TextPromptView(props) {
                     <Button
                         className="mt-3"
                         variant="secondary"
-                        onClick={console.log("Button Pressed")}
+                        // onClick={console.log("Button Pressed")}
+                        onClick={()=>{sendGenerateRequest("BOS_None")}}
                     // disabled={textInput === ""}
                     >
                         Generate 🪄
