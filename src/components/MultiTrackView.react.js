@@ -207,6 +207,36 @@ const MultiTrackView = (props) => {
     return { color: "yellow", marginLeft: `${(currentTime / totalMs) * 100}%` };
   };
 
+  const handleSoloButton = (idx) => {
+    if (soloTrack.includes(idx)) {
+      const newSoloTrack = [...soloTrack].filter((track) => track !== idx);
+      setSoloTrack(newSoloTrack);
+    } else if (mutedTracks.includes(idx)) {
+      const newMutedTrack = [...mutedTracks].filter((track) => track !== idx);
+      setMutedTracks(newMutedTrack);
+      const newSoloTrack = [...soloTrack].concat(idx);
+      setSoloTrack(newSoloTrack);
+    } else {
+      const newSoloTrack = [...soloTrack].concat(idx);
+      setSoloTrack(newSoloTrack);
+    }
+  };
+
+  const handleMuteButton = (idx) => {
+    if (mutedTracks.includes(idx)) {
+      const newMutedTrack = [...mutedTracks].filter((track) => track !== idx);
+      setMutedTracks(newMutedTrack);
+    } else if (soloTrack.includes(idx)) {
+      const newSoloTrack = [...soloTrack].filter((track) => track !== idx);
+      setSoloTrack(newSoloTrack);
+      const newMutedTrack = [...mutedTracks].concat(idx);
+      setMutedTracks(newMutedTrack);
+    } else {
+      const newMutedTrack = [...mutedTracks].concat(idx);
+      setMutedTracks(newMutedTrack);
+    }
+  };
+
   return (
     <>
       <Row>
@@ -264,14 +294,16 @@ const MultiTrackView = (props) => {
                 <Col xs={1}>
                   <Button
                     variant="outline-primary"
-                    onClick={() => setSoloTrack(idx)}>
+                    onClick={() => handleSoloButton(idx)}
+                    active={soloTrack.includes(idx)}>
                     Solo
                   </Button>
                 </Col>
                 <Col xs={1}>
                   <Button
                     variant="outline-secondary"
-                    onClick={() => setMutedTracks((prev) => [...prev, idx])}>
+                    onClick={() => handleMuteButton(idx)}
+                    active={mutedTracks.includes(idx)}>
                     Mute
                   </Button>
                 </Col>
