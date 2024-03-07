@@ -97,7 +97,15 @@ const MultiTrackView = (props) => {
     if (!playing && midiFile) {
       const now = Tone.now();
 
-      midiFile.tracks.forEach((track) => {
+      midiFile.tracks.forEach((track, idx) => {
+        if (soloTrack.length > 0 && !soloTrack.includes(idx)) {
+          return;
+        }
+
+        if (mutedTracks.includes(idx)) {
+          return;
+        }
+
         //create a synth for each track
         const synth = new Tone.PolySynth(Tone.Synth, {
           envelope: {
