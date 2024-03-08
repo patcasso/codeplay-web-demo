@@ -149,7 +149,7 @@ const MidiView = (props) => {
                                 </Dropdown.Item>
                             </DropdownButton>
                             <Button
-                                className="float-end"
+                                className="float-start"
                                 variant="outline-secondary"
                                 onClick={sendMidiToServer}
                             >
