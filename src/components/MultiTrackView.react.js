@@ -1,11 +1,15 @@
 import React from "react";
 import { useState, useEffect } from "react";
+
+import SingleTrackView from './SingleTrackView.react.js'
+
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Button from "react-bootstrap/Button";
-import Soundfont from "soundfont-player";
 
+import Soundfont from "soundfont-player";
 import * as Tone from "tone";
+
 import { instrumentObj } from "../utils/InstrumentList";
 
 const BEATS_PER_BAR = 4;
@@ -221,6 +225,7 @@ const MultiTrackView = (props) => {
   };
 
   const handleSoloButton = (idx) => {
+    // console.log(idx);
     if (soloTrack.includes(idx)) {
       const newSoloTrack = [...soloTrack].filter((track) => track !== idx);
       setSoloTrack(newSoloTrack);
@@ -236,6 +241,7 @@ const MultiTrackView = (props) => {
   };
 
   const handleMuteButton = (idx) => {
+    // console.log(idx);
     if (mutedTracks.includes(idx)) {
       const newMutedTrack = [...mutedTracks].filter((track) => track !== idx);
       setMutedTracks(newMutedTrack);
@@ -302,62 +308,18 @@ const MultiTrackView = (props) => {
       {midiFile
         ? midiFile.tracks.map((track, idx) =>
           track.notes.length > 0 ? ( // note가 있는 트랙만 표시
-            <Row key={idx}>
-              <Col xs={1}>
-                {track.name}
-              </Col>
-              <Col xs={1}>
-                <Button
-                  className="float-end"
-                  variant="outline-danger"
-                  onClick={() => handleClickRemove(idx)}
-                  size="sm"
-                >
-                  X
-                </Button>
-                <Button
-                  className="float-end"
-                  variant="outline-primary"
-                  onClick={() => handleSoloButton(idx)}
-                  active={soloTrack.includes(idx)}
-                  size="sm"
-                >
-                  S
-                </Button>
-                <Button
-                  className="float-end"
-                  variant="outline-secondary"
-                  onClick={() => handleMuteButton(idx)}
-                  active={mutedTracks.includes(idx)}
-                  size="sm"
-                >
-                  M
-                </Button>
-              </Col>
-              <Col xs={10}>
-                {/* Notes : {JSON.stringify(track.notes)} */}
-                <Row
-                  className="mb-2 p-2"
-                  style={{ backgroundColor: "lightblue" }}>
-                  {track.notes.map((note, idx) => (
-                    <div
-                      key={idx}
-                      style={handleNoteStyle(
-                        idx,
-                        note.time,
-                        note.duration,
-                        idx < track.notes.length - 1
-                          ? track.notes[idx + 1].time
-                          : totalMs / 1000
-                      )}>
-                      ♥{/* {note.pitch} */}
-                      {/* {note.time} */}
-                      {/* {note.duration} */}
-                    </div>
-                  ))}
-                </Row>
-              </Col>
-            </Row>
+            <SingleTrackView
+              key={idx}
+              idx={idx}
+              track={track}
+              totalMs={totalMs}
+              soloTrack={soloTrack}
+              mutedTracks={mutedTracks}
+              handleClickRemove={handleClickRemove}
+              handleSoloButton={handleSoloButton}
+              handleMuteButton={handleMuteButton}
+              handleNoteStyle={handleNoteStyle}
+            />
           ) : null
         )
         : null}
