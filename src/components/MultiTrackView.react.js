@@ -45,8 +45,8 @@ const MultiTrackView = (props) => {
       setMsPerBeat((60 * 1000) / props.midiFile.header.tempos[0].bpm);
       setTotalMs(
         ((60 * 1000) / props.midiFile.header.tempos[0].bpm) *
-          BEATS_PER_BAR *
-          NUM_BARS
+        BEATS_PER_BAR *
+        NUM_BARS
       );
     }
   }, [props.midiFile]);
@@ -63,6 +63,7 @@ const MultiTrackView = (props) => {
   const playInstrument = () => {
     const acTime = ac.currentTime;
     console.log(acTime); // 현재 AudioContext가 시작되고 난 후의 시간
+    setCurrentTime((prev) => prev - 500);
 
     midiFile &&
       midiFile.tracks.forEach((track) => {
@@ -168,7 +169,11 @@ const MultiTrackView = (props) => {
   };
 
   const handleClickRemove = (trackNum) => {
-    removeTrack(trackNum);
+    if (window.confirm(`Are you sure to delete the track?`)) {
+      removeTrack(trackNum);
+    } else {
+      return;
+    }
   };
 
   const handleClickPlayInstrument = () => {
@@ -289,65 +294,72 @@ const MultiTrackView = (props) => {
         </Col>
       </Row>
       <Row className="mt-3" style={{ color: "gray" }}>
-        <Col xs={4}>Current Time: {(currentTime / 1000).toFixed(1)} (s)</Col>
-        <Col xs={7} style={{ backgroundColor: "green" }} className="mb-2">
+        <Col xs={2}>Current Time: {(currentTime / 1000).toFixed(1)} (s)</Col>
+        <Col xs={10} style={{ backgroundColor: "green" }} className="mb-2">
           <div style={handleProgressBar()}>▼</div>
         </Col>
       </Row>
       {midiFile
         ? midiFile.tracks.map((track, idx) =>
-            track.notes.length > 0 ? ( // note가 있는 트랙만 표시
-              <Row key={idx}>
-                <Col xs={2}>{track.name}</Col>
-                <Col xs={1}>
-                  <Button
-                    variant="outline-primary"
-                    onClick={() => handleSoloButton(idx)}
-                    active={soloTrack.includes(idx)}>
-                    Solo
-                  </Button>
-                </Col>
-                <Col xs={1}>
-                  <Button
-                    variant="outline-secondary"
-                    onClick={() => handleMuteButton(idx)}
-                    active={mutedTracks.includes(idx)}>
-                    Mute
-                  </Button>
-                </Col>
-                <Col xs={7}>
-                  {/* Notes : {JSON.stringify(track.notes)} */}
-                  <Row
-                    className="mb-2 p-2"
-                    style={{ backgroundColor: "lightblue" }}>
-                    {track.notes.map((note, idx) => (
-                      <div
-                        key={idx}
-                        style={handleNoteStyle(
-                          idx,
-                          note.time,
-                          note.duration,
-                          idx < track.notes.length - 1
-                            ? track.notes[idx + 1].time
-                            : totalMs / 1000
-                        )}>
-                        ♥{/* {note.pitch} */}
-                        {/* {note.time} */}
-                        {/* {note.duration} */}
-                      </div>
-                    ))}
-                  </Row>
-                </Col>
-                <Col xs={1}>
-                  <Button
-                    variant="outline-danger"
-                    onClick={() => handleClickRemove(idx)}>
-                    X
-                  </Button>
-                </Col>
-              </Row>
-            ) : null
-          )
+          track.notes.length > 0 ? ( // note가 있는 트랙만 표시
+            <Row key={idx}>
+              <Col xs={1}>
+                {track.name}
+              </Col>
+              <Col xs={1}>
+                <Button
+                  className="float-end"
+                  variant="outline-danger"
+                  onClick={() => handleClickRemove(idx)}
+                  size="sm"
+                >
+                  X
+                </Button>
+                <Button
+                  className="float-end"
+                  variant="outline-primary"
+                  onClick={() => handleSoloButton(idx)}
+                  active={soloTrack.includes(idx)}
+                  size="sm"
+                >
+                  S
+                </Button>
+                <Button
+                  className="float-end"
+                  variant="outline-secondary"
+                  onClick={() => handleMuteButton(idx)}
+                  active={mutedTracks.includes(idx)}
+                  size="sm"
+                >
+                  M
+                </Button>
+              </Col>
+              <Col xs={10}>
+                {/* Notes : {JSON.stringify(track.notes)} */}
+                <Row
+                  className="mb-2 p-2"
+                  style={{ backgroundColor: "lightblue" }}>
+                  {track.notes.map((note, idx) => (
+                    <div
+                      key={idx}
+                      style={handleNoteStyle(
+                        idx,
+                        note.time,
+                        note.duration,
+                        idx < track.notes.length - 1
+                          ? track.notes[idx + 1].time
+                          : totalMs / 1000
+                      )}>
+                      ♥{/* {note.pitch} */}
+                      {/* {note.time} */}
+                      {/* {note.duration} */}
+                    </div>
+                  ))}
+                </Row>
+              </Col>
+            </Row>
+          ) : null
+        )
         : null}
     </>
   );

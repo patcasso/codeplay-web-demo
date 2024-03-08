@@ -42,9 +42,11 @@ const readFileAsArrayBuffer = (file) => {
     });
 };
 
+
 // Main component
 const MidiView = (props) => {
     const [midiFile, setMidiFile] = useState();
+    const [midiFileRaw, setMidiFileRaw] = useState();
     const [fileName, setFileName] = useState("Drag and drop MIDI file here (4 Bars only!)")
     const [sampleTitle, setSampleTitle] = useState("Sample MIDI");
 
@@ -55,24 +57,42 @@ const MidiView = (props) => {
 
         if (file) {
             try {
+                setMidiFileRaw(file);
+                console.log(midiFileRaw)
+
                 const arrayBuffer = await readFileAsArrayBuffer(file);
                 const midi = new Midi(arrayBuffer)
                 // console.log(arrayBuffer);
                 console.log(midi);
                 setMidiFile(midi);
                 setFileName(file.name);
-
             } catch (error) {
                 console.error('Error parsing MIDI file:', error);
             }
         }
     };
 
-    // TODO : 샘플 미디 파일 로딩되게 하기
-    const handleClickLoad = async () => {
-        console.log("Midi file loaded");
-        // setMidiFile(bodyAndSoulJSON);
-        setMidiFile(twentiethJSON);
+    function sendMidiToServer(event) {
+
+        console.log(midiFileRaw) // useState에 저장된 BLOB 형태로 존재
+
+        // Create FormData object
+        const formData = new FormData();
+        formData.append('midi_file', midiFileRaw, fileName);
+
+        // Make the POST request using fetch
+        // fetch('http://0.0.0.0:8000/sendmidi/', {
+        fetch('http://223.130.130.56:8200/upload_midi/', { // 승백님 서버 주소
+            method: 'POST',
+            body: formData,
+        })
+            .then(response => response.text())
+            .then(data => {
+                console.log(data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
     }
 
 
@@ -128,6 +148,13 @@ const MidiView = (props) => {
                                     <span>20th Century Stomp</span>
                                 </Dropdown.Item>
                             </DropdownButton>
+                            <Button
+                                className="float-end"
+                                variant="outline-secondary"
+                                onClick={sendMidiToServer}
+                            >
+                                Send MIDI to Server
+                            </Button>
                         </Col>
                     </Row>
                     <MultiTrackView midiFile={midiFile} />
