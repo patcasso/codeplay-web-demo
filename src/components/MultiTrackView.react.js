@@ -27,6 +27,7 @@ const MultiTrackView = (props) => {
   const [synths, setSynths] = useState([]);
   const [soloTrack, setSoloTrack] = useState([]);
   const [mutedTracks, setMutedTracks] = useState([]);
+  const [instrumentArray, setInstrumentArray] = useState([]);
 
   // console.log(props.midiFile);
 
@@ -85,7 +86,8 @@ const MultiTrackView = (props) => {
             duration: note.duration,
           });
         });
-        Soundfont.instrument(ac, inst).then(function (play) {
+        const audioContext = Soundfont.instrument(ac, inst).then(function (play) {
+          instrumentArray.push(play)
           play.schedule(acTime + 0.5, notes_arr);
         });
       });
@@ -189,6 +191,17 @@ const MultiTrackView = (props) => {
     setPlaying((prev) => !prev);
     stopInstrument();
   };
+  
+  const handleClickACPause = () => {
+    // console.log("paused")
+    console.log(instrumentArray)
+    instrumentArray.forEach((inst)=>{
+      inst.stop()
+    })
+    setInstrumentArray([]);
+    setPlaying((prev) => !prev)
+    // setCurrentTime(0)
+  }
 
   const handleNoteStyle = (idx, time, duration, nextStartTime) => {
     let marginLeft;
@@ -259,43 +272,50 @@ const MultiTrackView = (props) => {
   return (
     <>
       <Row>
-        <Col>
-          <Button className="mt-3" variant="dark" onClick={handleClickPlay}>
+        <Col className="mt-3">
+          <Button variant="dark" onClick={handleClickPlay}>
             {playing ? "PAUSE" : "PLAY"}
           </Button>
           <Button
-            className="mt-3 ms-2"
+            className="ms-2"
             variant="dark"
             onClick={handleClickBeginning}>
             ◀◀
           </Button>
           <Button
-            className="mt-3 ms-2"
+            className="ms-2"
             variant="dark"
             onClick={handleClickRewind}>
             ◀
           </Button>
           <Button
-            className="mt-3 ms-2"
+            className="ms-2"
             variant="dark"
             onClick={handleClickForward}>
             ▶
           </Button>
-          <Button className="mt-3 ms-2" variant="dark" onClick={handleClickEnd}>
+          <Button className="ms-2" variant="dark" onClick={handleClickEnd}>
             ▶▶
           </Button>
           <Button
-            className="mt-3 ms-2"
+            className="ms-2"
+            disabled={playing}
             variant="dark"
             onClick={handleClickPlayInstrument}>
             Play INST
           </Button>
           <Button
-            // disabled
-            className="mt-3 ms-2"
+            disabled={!playing}
+            className="ms-2"
             variant="dark"
             onClick={handleClickStopInstrument}>
             Kill INST
+          </Button>
+          <Button
+            onClick={handleClickACPause}
+            className="ms-2"
+          >
+            AC Pause Test
           </Button>
         </Col>
       </Row>
@@ -312,6 +332,7 @@ const MultiTrackView = (props) => {
               key={idx}
               idx={idx}
               track={track}
+              playing={playing}
               totalMs={totalMs}
               soloTrack={soloTrack}
               mutedTracks={mutedTracks}
