@@ -86,7 +86,7 @@ const MidiView = (props) => {
 
                 const arrayBuffer = await readFileAsArrayBuffer(file);
                 const midi = new Midi(arrayBuffer)
-                // console.log(arrayBuffer);
+                
                 setMidiFile(midi);
                 setFileName(file.name);
             } catch (error) {
@@ -115,15 +115,10 @@ const MidiView = (props) => {
     // 미디 파일을 서버로 보낼 수 있는 함수
     const sendMidiToServer = (midi, instNum) => {
 
-        // console.log(midiFileRaw)
-        // console.log(midi)
-
         // Create FormData object
         const formData = new FormData();
-        // formData.append('midi_file', midiFileRaw, fileName);
         const midiArray = midi.toArray()
         const midiBlob = new Blob([midiArray])
-        // console.log(midiBlob)
 
         formData.append('midi_file', midiBlob, fileName);
 
@@ -131,8 +126,8 @@ const MidiView = (props) => {
         formData.append('instnum', instNum)
 
         // Make the POST request using fetch
-        fetch('http://0.0.0.0:8000/upload_midi/', {
-            // fetch('http://223.130.130.56:8200/upload_midi/', { // 승백님 서버 주소
+        // fetch('http://0.0.0.0:8000/upload_midi/', {
+            fetch('http://223.130.130.56:8200/upload_midi/', { // 승백님 서버 주소
             method: 'POST',
             body: formData,
         })
@@ -158,8 +153,6 @@ const MidiView = (props) => {
     const handleDownloadMidi = () => {
         if (midiFile) {
             try {
-                // console.log("Midi downloaded");
-                // const jsonMidi = JSON.stringify(midiFile)
                 const midiArray = midiFile.toArray()
                 const midiBlob = new Blob([midiArray])
                 // Create a Blob URL for the data
