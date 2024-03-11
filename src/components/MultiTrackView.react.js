@@ -31,6 +31,7 @@ const MultiTrackView = (props) => {
 
   // console.log(props.midiFile);
 
+
   useEffect(() => {
     let intervalId;
     if (playing) {
@@ -67,7 +68,7 @@ const MultiTrackView = (props) => {
 
   const playInstrument = () => {
     const acTime = ac.currentTime;
-    console.log(acTime); // 현재 AudioContext가 시작되고 난 후의 시간
+    // console.log(acTime); // 현재 AudioContext가 시작되고 난 후의 시간
     setCurrentTime((prev) => prev - 500);
 
     midiFile &&
@@ -191,11 +192,11 @@ const MultiTrackView = (props) => {
     setPlaying((prev) => !prev);
     stopInstrument();
   };
-  
+
   const handleClickACPause = () => {
     // console.log("paused")
     console.log(instrumentArray)
-    instrumentArray.forEach((inst)=>{
+    instrumentArray.forEach((inst) => {
       inst.stop()
     })
     setInstrumentArray([]);
@@ -314,15 +315,18 @@ const MultiTrackView = (props) => {
           <Button
             onClick={handleClickACPause}
             className="ms-2"
+            variant="outline-dark"
           >
-            AC Pause Test
+            Pause Test
           </Button>
         </Col>
       </Row>
       <Row className="mt-3" style={{ color: "gray" }}>
         <Col xs={2}>Current Time: {(currentTime / 1000).toFixed(1)} (s)</Col>
-        <Col xs={10} style={{ backgroundColor: "green" }} className="mb-2">
+        <Col xs={9} style={{ backgroundColor: "green" }} className="mb-2">
           <div style={handleProgressBar()}>▼</div>
+        </Col>
+        <Col xs={1}>
         </Col>
       </Row>
       {midiFile
@@ -340,6 +344,8 @@ const MultiTrackView = (props) => {
               handleSoloButton={handleSoloButton}
               handleMuteButton={handleMuteButton}
               handleNoteStyle={handleNoteStyle}
+              setRegenTrackIdx={props.setRegenTrackIdx}
+              setRegenInstNum={props.setRegenInstNum}
             />
           ) : null
         )

@@ -1,13 +1,17 @@
 import React from "react";
-import { useState, useEffect } from "react";
 
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Button from "react-bootstrap/Button";
 
 const SingleTrackView = (props) => {
-    // console.log(props.mutedTracks);
-    // console.log(props.idx)
+
+    const handleClickRegenerate = () =>{
+        // console.log(`regen track ${props.idx}`)
+        props.setRegenTrackIdx(props.idx)
+        props.setRegenInstNum(props.track.instrument.number)
+    }
+
     return (
         <Row key={props.idx}>
             <Col xs={1} className="d-flex">
@@ -49,7 +53,7 @@ const SingleTrackView = (props) => {
                     M
                 </Button>
             </Col>
-            <Col xs={10}>
+            <Col xs={9}>
                 {/* Notes : {JSON.stringify(track.notes)} */}
                 <Row
                     className="mb-2 p-2"
@@ -71,6 +75,15 @@ const SingleTrackView = (props) => {
                         </div>
                     ))}
                 </Row>
+            </Col>
+            <Col xs={1}>
+                <Button
+                    size="sm"
+                    onClick={handleClickRegenerate}
+                    variant="outline-primary"
+                >
+                    ↺
+                </Button>
             </Col>
         </Row>
     )
