@@ -34,7 +34,6 @@ const SingleTrackView = (props) => {
                 </Button>
                 <Button
                     className="float-end"
-                    disabled={props.playing}
                     variant="outline-primary"
                     onClick={() => props.handleSoloButton(props.idx)}
                     active={props.soloTrack.includes(props.idx)}
@@ -44,7 +43,6 @@ const SingleTrackView = (props) => {
                 </Button>
                 <Button
                     className="float-end"
-                    disabled={props.playing}
                     variant="outline-secondary"
                     onClick={() => props.handleMuteButton(props.idx)}
                     active={props.mutedTracks.includes(props.idx)}

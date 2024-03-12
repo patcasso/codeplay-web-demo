@@ -10,13 +10,15 @@ import Button from "react-bootstrap/Button";
 import Soundfont from "soundfont-player";
 import * as Tone from "tone";
 
-import { instrumentObj } from "../utils/InstrumentList";
+import { instrumentMap } from "../utils/InstrumentList";
 
 const BEATS_PER_BAR = 4;
 const NUM_BARS = 4;
 
 // console.log(instrumentList);
-const ac = new AudioContext();
+// const ac = new AudioContext();
+// let audioContext;
+const audioContext = new AudioContext();
 
 const MultiTrackView = (props) => {
   const [midiFile, setMidiFile] = useState();
@@ -27,11 +29,10 @@ const MultiTrackView = (props) => {
   const [synths, setSynths] = useState([]);
   const [soloTrack, setSoloTrack] = useState([]);
   const [mutedTracks, setMutedTracks] = useState([]);
-  const [instrumentArray, setInstrumentArray] = useState([]);
-
-  // console.log(props.midiFile);
+  const [instrumentObject, setInstrumentObject] = useState({});
 
 
+  // currentTime 업데이트
   useEffect(() => {
     let intervalId;
     if (playing) {
@@ -44,6 +45,7 @@ const MultiTrackView = (props) => {
     };
   }, [playing]);
 
+  // midiFile prop 내려오면 멀티트랙으로 적용시키기
   useEffect(() => {
     if (props.midiFile) {
       setMidiFile(props.midiFile);
@@ -54,9 +56,23 @@ const MultiTrackView = (props) => {
         BEATS_PER_BAR *
         NUM_BARS
       );
+      // props.midiFile.tracks.forEach((track, idx) => {
+      //   let inst = instrumentMap[track.instrument.number];
+      //   if (!inst) {
+      //     inst = "marimba";
+      //   }
+      //   const soundfontInstance = Soundfont.instrument(audioContext, inst).then(function (play) {
+      //     setInstrumentObject((prev) => {
+      //       return { ...prev, [idx]: play };
+      //     });
+      //   });
+      // })
+      // console.log(instrumentObject)
     }
+
   }, [props.midiFile]);
 
+  // 총 duration 시간 넘어가면 자동으로 재생 멈추게 하기
   useEffect(() => {
     if (currentTime >= totalMs) {
       setPlaying(false);
@@ -64,40 +80,84 @@ const MultiTrackView = (props) => {
     }
   });
 
-  // Midi Playing / Editing Functions
+  // Solo 트랙 처리
+  useEffect(() => {
+    console.log(instrumentObject)
+    Object.entries(instrumentObject).forEach(([idx, inst]) => {
+      if (soloTrack.length > 0 && !soloTrack.includes(Number(idx))) {
+        // soloTrack에 포함되지 않은 트랙은 gain을 0으로 변경
+        inst.out.gain.value = 0
+        console.log("muted: ", idx, inst.name)
+      } else {
+        inst.out.gain.value = 1
+        console.log("playing: ", idx, inst.name)
+      }
+    })
+  }, [soloTrack, playing])
 
+  // Muted 트랙 처리
+  useEffect(() => {
+    Object.entries(instrumentObject).forEach(([idx, inst]) => {
+      if (mutedTracks.length > 0 && !mutedTracks.includes(Number(idx))) {
+        // mutedTracks에 포함되지 않은 트랙은 gain을 1로 변경
+        inst.out.gain.value = 1
+        console.log("playing: ", idx, inst.name)
+      } else {
+        inst.out.gain.value = 0
+        console.log("muted: ", idx, inst.name)
+      }
+    })
+  }, [mutedTracks, playing])
+
+
+  // ======== Midi Playing / Editing Functions
+
+  // Play Midi in soundfont instruments
   const playInstrument = () => {
-    const acTime = ac.currentTime;
-    // console.log(acTime); // 현재 AudioContext가 시작되고 난 후의 시간
+    // audioContext = new AudioContext();
+    const acTime = audioContext.currentTime;
     setCurrentTime((prev) => prev - 500);
 
     midiFile &&
-      midiFile.tracks.forEach((track) => {
-        // const track = midiFile.tracks[2];
-        // console.log(instrumentObj[track.instrument.number]);
-        let inst = instrumentObj[track.instrument.number];
+      midiFile.tracks.forEach((track, idx) => {
+        let inst = instrumentMap[track.instrument.number];
         if (!inst) {
           inst = "marimba";
         }
         const notes_arr = [];
         track.notes.forEach((note) => {
-          notes_arr.push({
-            time: note.time,
-            note: note.name,
-            duration: note.duration,
-          });
+          note.time * 1000 >= currentTime &&
+            notes_arr.push({
+              time: note.time - currentTime / 1000,
+              note: note.name,
+              duration: note.duration,
+            });
         });
-        const audioContext = Soundfont.instrument(ac, inst).then(function (play) {
-          instrumentArray.push(play)
+        const soundfontInstance = Soundfont.instrument(audioContext, inst).then(function (play) {
+          setInstrumentObject((prev) => {
+            return { ...prev, [idx]: play };
+          });
           play.schedule(acTime + 0.5, notes_arr);
         });
+        // instrumentObject[idx].schedule(acTime + 0.5, notes_arr);
       });
   };
 
-  // TODO : 정지 버튼 개발
+  // Pause Instrument at current position
+  const pauseInstrument = () => {
+    audioContext.close()
+
+    Object.entries(instrumentObject).forEach(([idx, inst]) => {
+      inst.stop()
+    })
+    setInstrumentObject({});
+  }
+
+  // Stop Button
   const stopInstrument = () => {
-    console.log("Stop audio context");
-    ac.close();
+    audioContext.close();
+    setCurrentTime(0);
+    setInstrumentObject({});
   };
 
   const playMidi = () => {
@@ -151,12 +211,12 @@ const MultiTrackView = (props) => {
     setMidiFile(newMidi);
   };
 
-  // Button Click Handlers
+
+  // ==== Event Handlers ======
 
   const handleClickPlay = () => {
     setPlaying((prev) => !prev);
     playMidi();
-    // setCurrentTime(0);
   };
   const handleClickRewind = () => {
     currentTime - msPerBeat > 0 && setCurrentTime((prev) => prev - msPerBeat);
@@ -184,25 +244,22 @@ const MultiTrackView = (props) => {
   };
 
   const handleClickPlayInstrument = () => {
+    if (playing) {
+      pauseInstrument();
+    } else {
+      playInstrument();
+    }
     setPlaying((prev) => !prev);
-    playInstrument();
   };
 
   const handleClickStopInstrument = () => {
-    setPlaying((prev) => !prev);
-    stopInstrument();
+    if (playing) {
+      setPlaying((prev) => !prev);
+      stopInstrument();
+    } else {
+      setCurrentTime(0);
+    }
   };
-
-  const handleClickACPause = () => {
-    // console.log("paused")
-    console.log(instrumentArray)
-    instrumentArray.forEach((inst) => {
-      inst.stop()
-    })
-    setInstrumentArray([]);
-    setPlaying((prev) => !prev)
-    // setCurrentTime(0)
-  }
 
   const handleNoteStyle = (idx, time, duration, nextStartTime) => {
     let marginLeft;
@@ -273,6 +330,16 @@ const MultiTrackView = (props) => {
   return (
     <>
       <Row>
+        <Row>
+          <Col>
+            Solo Tracks : {JSON.stringify(soloTrack)}
+          </Col>
+        </Row>
+        <Row>
+          <Col>
+            Muted Tracks : {JSON.stringify(mutedTracks)}
+          </Col>
+        </Row>
         <Col className="mt-3">
           <Button variant="dark" onClick={handleClickPlay}>
             {playing ? "PAUSE" : "PLAY"}
@@ -300,24 +367,17 @@ const MultiTrackView = (props) => {
           </Button>
           <Button
             className="ms-2"
-            disabled={playing}
+            // disabled={playing}
             variant="dark"
             onClick={handleClickPlayInstrument}>
-            Play INST
+            {playing ? "PAUSE INST" : "PLAY INST"}
           </Button>
           <Button
-            disabled={!playing}
             className="ms-2"
             variant="dark"
             onClick={handleClickStopInstrument}>
-            Kill INST
-          </Button>
-          <Button
-            onClick={handleClickACPause}
-            className="ms-2"
-            variant="outline-dark"
-          >
-            Pause Test
+            {/* ■ */}
+            STOP INST
           </Button>
         </Col>
       </Row>

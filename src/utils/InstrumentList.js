@@ -1,4 +1,4 @@
-export const instrumentObj = {
+export const instrumentMap = {
     21: 'accordion',
     32: 'acoustic_bass',
     0: 'acoustic_grand_piano',
