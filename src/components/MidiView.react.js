@@ -237,13 +237,13 @@ const MidiView = (props) => {
                                     <span>20th Century Stomp</span>
                                 </Dropdown.Item>
                             </DropdownButton>
-                            <Button
+                            {/* <Button
                                 className="float-start"
                                 variant="outline-secondary"
                                 onClick={sendMidiToServer}
                             >
                                 Send MIDI to Server
-                            </Button>
+                            </Button> */}
                             <Button
                                 className="float-start"
                                 variant="outline-dark"

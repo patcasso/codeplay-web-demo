@@ -29,19 +29,20 @@ const readFileAsArrayBuffer = (file) => {
 
 
 const TextPromptView = (props) => {
+  const [prompt, setPrompt] = useState("");
   const [showTextPrompt, setShowTextPrompt] = useState(true);
 
-  const sendGenerateRequest = (text) => {
+  const sendGenerateRequest = () => {
     fetch(
       // "http://0.0.0.0:8000/generate/",
-      "http://223.130.130.56:8200/generate_midi/",
+      "http://223.130.162.67:8200/generate_midi/",
       {
         method: 'POST',
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          "prompt": text,
+          "prompt": prompt,
         }),
       }
     )
@@ -55,6 +56,7 @@ const TextPromptView = (props) => {
       .catch((error) => {
         console.error(error);
       });
+    setPrompt("");
   };
 
   return (
@@ -87,8 +89,10 @@ const TextPromptView = (props) => {
                 id="prompt-input-field"
                 type="text"
                 placeholder="Enter prompt"
+                value={prompt}
                 onChange={(event) => {
-                  console.log(event)
+                  console.log(event.target.value);
+                  setPrompt(event.target.value);
                 }}
                 autoFocus="autofocus"
               />
@@ -97,7 +101,7 @@ const TextPromptView = (props) => {
               className="mt-3 float-end"
               variant="secondary"
               // onClick={console.log("Button Pressed")}
-              onClick={() => { sendGenerateRequest("BOS_None") }}
+              onClick={sendGenerateRequest}
             // onClick={sendGenerateRequest}
             // disabled={textInput === ""}
             >
