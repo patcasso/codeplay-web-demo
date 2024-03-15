@@ -15,9 +15,7 @@ import { instrumentMap } from "../utils/InstrumentList";
 const BEATS_PER_BAR = 4;
 const NUM_BARS = 4;
 
-// console.log(instrumentList);
-// const ac = new AudioContext();
-// let audioContext;
+// 페이지를 로드할 때 하나의 AudioContext 만들어 시간을 추적하며 계속해서 사용
 const audioContext = new AudioContext();
 
 const MultiTrackView = (props) => {
@@ -56,18 +54,18 @@ const MultiTrackView = (props) => {
         BEATS_PER_BAR *
         NUM_BARS
       );
-      // props.midiFile.tracks.forEach((track, idx) => {
-      //   let inst = instrumentMap[track.instrument.number];
-      //   if (!inst) {
-      //     inst = "marimba";
-      //   }
-      //   const soundfontInstance = Soundfont.instrument(audioContext, inst).then(function (play) {
-      //     setInstrumentObject((prev) => {
-      //       return { ...prev, [idx]: play };
-      //     });
-      //   });
-      // })
-      // console.log(instrumentObject)
+      props.midiFile.tracks.forEach((track, idx) => {
+        let inst = instrumentMap[track.instrument.number];
+        if (!inst) {
+          inst = "marimba";
+        }
+        const soundfontInstance = Soundfont.instrument(audioContext, inst).then(function (play) {
+          setInstrumentObject((prev) => {
+            return { ...prev, [idx]: play };
+          });
+        });
+      })
+      console.log(instrumentObject)
     }
 
   }, [props.midiFile]);
@@ -80,37 +78,44 @@ const MultiTrackView = (props) => {
     }
   });
 
-  // Solo 트랙 처리
+  // Solo 및 Mute 트랙 볼륨 처리
   useEffect(() => {
-    console.log(instrumentObject)
-    Object.entries(instrumentObject).forEach(([idx, inst]) => {
-      if (soloTrack.length > 0 && !soloTrack.includes(Number(idx))) {
-        // soloTrack에 포함되지 않은 트랙은 gain을 0으로 변경
-        inst.out.gain.value = 0
-        console.log("muted: ", idx, inst.name)
-      } else {
-        inst.out.gain.value = 1
-        console.log("playing: ", idx, inst.name)
+    if (instrumentObject) {
+      // 1. Solo가 켜 있을 때
+      if (soloTrack.length > 0) {
+        console.log("Solo On case")
+        Object.entries(instrumentObject).forEach(([idx, inst]) => {
+          if (soloTrack.includes(Number(idx))) {
+            inst.out.gain.value = 1
+          } else {
+            inst.out.gain.value = 0
+          }
+        })
+      } else if (soloTrack.length == 0) {
+        // 2-1. Solo가 꺼 있고, Mute는 켜 있을 때
+        if (mutedTracks.length > 0) {
+          console.log("Solo Off, Mute On case")
+          Object.entries(instrumentObject).forEach(([idx, inst]) => {
+            if (mutedTracks.includes(Number(idx))) {
+              inst.out.gain.value = 0
+            } else {
+              inst.out.gain.value = 1
+            }
+          })
+        } else if (mutedTracks.length == 0) {
+          // 2-2. Solo도 꺼 있고, Mute도 꺼 있을 때
+          console.log("Solo Off, Mute Off case")
+          Object.entries(instrumentObject).forEach(([idx, inst]) => {
+            inst.out.gain.value = 1
+          })
+        }
       }
-    })
-  }, [soloTrack, playing])
-
-  // Muted 트랙 처리
-  useEffect(() => {
-    Object.entries(instrumentObject).forEach(([idx, inst]) => {
-      if (mutedTracks.length > 0 && !mutedTracks.includes(Number(idx))) {
-        // mutedTracks에 포함되지 않은 트랙은 gain을 1로 변경
-        inst.out.gain.value = 1
-        console.log("playing: ", idx, inst.name)
-      } else {
-        inst.out.gain.value = 0
-        console.log("muted: ", idx, inst.name)
-      }
-    })
-  }, [mutedTracks, playing])
+    }
+  }, [instrumentObject, soloTrack, mutedTracks])
 
 
   // ======== Midi Playing / Editing Functions
+
 
   // Play Midi in soundfont instruments
   const playInstrument = () => {
@@ -133,31 +138,31 @@ const MultiTrackView = (props) => {
               duration: note.duration,
             });
         });
-        const soundfontInstance = Soundfont.instrument(audioContext, inst).then(function (play) {
-          setInstrumentObject((prev) => {
-            return { ...prev, [idx]: play };
-          });
-          play.schedule(acTime + 0.5, notes_arr);
-        });
-        // instrumentObject[idx].schedule(acTime + 0.5, notes_arr);
+        // const soundfontInstance = Soundfont.instrument(audioContext, inst).then(function (play) {
+        //   setInstrumentObject((prev) => {
+        //     return { ...prev, [idx]: play };
+        //   });
+        //   play.schedule(acTime + 0.5, notes_arr);
+        // });
+        // console.log(instrumentObject[idx])
+        console.log(acTime)
+        instrumentObject[idx].schedule(acTime + 0.5, notes_arr);
       });
   };
 
   // Pause Instrument at current position
   const pauseInstrument = () => {
-    audioContext.close()
-
     Object.entries(instrumentObject).forEach(([idx, inst]) => {
       inst.stop()
     })
-    setInstrumentObject({});
   }
 
   // Stop Button
   const stopInstrument = () => {
-    audioContext.close();
+    Object.entries(instrumentObject).forEach(([idx, inst]) => {
+      inst.stop()
+    })
     setCurrentTime(0);
-    setInstrumentObject({});
   };
 
   const playMidi = () => {
@@ -296,7 +301,6 @@ const MultiTrackView = (props) => {
   };
 
   const handleSoloButton = (idx) => {
-    // console.log(idx);
     if (soloTrack.includes(idx)) {
       const newSoloTrack = [...soloTrack].filter((track) => track !== idx);
       setSoloTrack(newSoloTrack);
@@ -312,7 +316,6 @@ const MultiTrackView = (props) => {
   };
 
   const handleMuteButton = (idx) => {
-    // console.log(idx);
     if (mutedTracks.includes(idx)) {
       const newMutedTrack = [...mutedTracks].filter((track) => track !== idx);
       setMutedTracks(newMutedTrack);
@@ -330,16 +333,6 @@ const MultiTrackView = (props) => {
   return (
     <>
       <Row>
-        <Row>
-          <Col>
-            Solo Tracks : {JSON.stringify(soloTrack)}
-          </Col>
-        </Row>
-        <Row>
-          <Col>
-            Muted Tracks : {JSON.stringify(mutedTracks)}
-          </Col>
-        </Row>
         <Col className="mt-3">
           <Button variant="dark" onClick={handleClickPlay}>
             {playing ? "PAUSE" : "PLAY"}
