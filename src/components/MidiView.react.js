@@ -11,16 +11,10 @@ import DropdownButton from "react-bootstrap/DropdownButton";
 import Form from 'react-bootstrap/Form';
 import InputGroup from 'react-bootstrap/InputGroup';
 
-import { bodyAndSoulJSON } from "../midi/body_n_soul_sample.js";
-import { twentiethJSON } from "../midi/twentieth_sample.js"
-
 import MultiTrackView from './MultiTrackView.react.js'
-
 
 import { Midi, Buffer } from '@tonejs/midi'
 
-
-// const sampleMidis = {"body_n_soul" : bodyAndSoulJSON, ""}
 
 // Drag & Drop event handler
 const handleDragOver = (event) => {
@@ -55,6 +49,8 @@ const MidiView = (props) => {
     const [regenTrackIdx, setRegenTrackIdx] = useState();
     const [regenInstNum, setRegenInstNum] = useState();
     const [addInstNum, setAddInstNum] = useState();
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [regenTrigger, setRegenTrigger] = useState(0);
 
 
     // 서버에서 생성해서 반환해준 미디 파일을 멀티트랙 뷰로 넘겨줌
@@ -69,9 +65,11 @@ const MidiView = (props) => {
         }
     }, [props.midiBlob])
 
+
+    // 악기 재생성 trigger
     useEffect(() => {
-        regenerateSingleInstrument()
-    }, [regenTrackIdx])
+        regenerateSingleInstrument();
+    }, [regenTrigger])
 
     // 드래그 앤 드롭으로 올린 미디 파일을 멀티트랙 뷰로 보내고 서버에 전송 가능한 형태로 준비시킴
     const handleFileDrop = async (event) => {
@@ -86,7 +84,7 @@ const MidiView = (props) => {
 
                 const arrayBuffer = await readFileAsArrayBuffer(file);
                 const midi = new Midi(arrayBuffer)
-                
+
                 setMidiFile(midi);
                 setFileName(file.name);
             } catch (error) {
@@ -114,6 +112,7 @@ const MidiView = (props) => {
 
     // 미디 파일을 서버로 보낼 수 있는 함수
     const sendMidiToServer = (midi, instNum) => {
+        setIsGenerating(true);
 
         // Create FormData object
         const formData = new FormData();
@@ -127,26 +126,28 @@ const MidiView = (props) => {
 
         // Make the POST request using fetch
         // fetch('http://0.0.0.0:8000/upload_midi/', {
-            fetch('http://223.130.130.56:8200/upload_midi/', { // 승백님 서버 주소
+        fetch('http://223.130.162.67:8200/upload_midi/', { // 승백님 서버 주소
             method: 'POST',
             body: formData,
         })
-            .then(response => response.text()) // .blob() 으로 response 받기 (TextPromptView 참조)
-            .then(data => {
-                console.log(data);
-                // TODO : 리턴 받은 blob
+            .then(response => response.blob()) // .blob() 으로 response 받기 (TextPromptView 참조)
+            .then((blob) => readFileAsArrayBuffer(blob))
+            .then(arrayBuffer => {
+                props.setMidiBlob(arrayBuffer)
+                setIsGenerating(false);
             })
             .catch(error => {
-                console.error('Error:', error);
+                alert(`Something went wrong. Please try again! \n\n[Error Message]\n${error}`)
+                setIsGenerating(false);
             });
     }
 
     const handleClickAddInst = () => {
         if (addInstNum) {
             sendMidiToServer(midiFile, addInstNum)
-        } else { 
+        } else {
             // 특정 악기 정하지 않고 그냥 Add Track하는 경우 예외 처리하기
-            sendMidiToServer(midiFile, 999) 
+            sendMidiToServer(midiFile, 999)
         }
     }
 
@@ -257,6 +258,8 @@ const MidiView = (props) => {
                         midiFile={midiFile}
                         setRegenTrackIdx={setRegenTrackIdx}
                         setRegenInstNum={setRegenInstNum}
+                        setRegenTrigger={setRegenTrigger}
+                        isGenerating={isGenerating}
                     />
                     {midiFile ?
                         <Row className="mt-3">
@@ -276,8 +279,9 @@ const MidiView = (props) => {
                                         className="float-"
                                         variant="outline-success"
                                         onClick={handleClickAddInst}
+                                        disabled={isGenerating}
                                     >
-                                        Add Inst
+                                        {isGenerating ? "Adding..." : "Add Inst"}
                                     </Button>
                                 </InputGroup>
 
