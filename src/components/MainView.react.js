@@ -26,6 +26,7 @@ const MainView = () => {
                     <MidiView
                         arrWidth={arrWidth}
                         midiBlob={midiBlob}
+                        setMidiBlob={setMidiBlob}
                     />
                 </Row>
             </Container>

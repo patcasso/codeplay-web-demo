@@ -31,8 +31,10 @@ const readFileAsArrayBuffer = (file) => {
 const TextPromptView = (props) => {
   const [prompt, setPrompt] = useState("");
   const [showTextPrompt, setShowTextPrompt] = useState(true);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const sendGenerateRequest = () => {
+    setIsGenerating(true);
     fetch(
       // "http://0.0.0.0:8000/generate/",
       "http://223.130.162.67:8200/generate_midi/",
@@ -49,14 +51,16 @@ const TextPromptView = (props) => {
       .then((response) => response.blob())
       .then((blob) => readFileAsArrayBuffer(blob))
       .then((arrayBuffer) => {
-        console.log(`arrayBuffer: ${arrayBuffer}`);
-        // console.log(newMidiData)
         props.setMidiBlob(arrayBuffer)
+        setPrompt("");
+        setIsGenerating(false);
       })
       .catch((error) => {
         console.error(error);
+        alert(`Something went wrong. Please try again! \n\n[Error Message]\n${error}`)
+        setIsGenerating(false);
       });
-    setPrompt("");
+
   };
 
   return (
@@ -91,7 +95,6 @@ const TextPromptView = (props) => {
                 placeholder="Enter prompt"
                 value={prompt}
                 onChange={(event) => {
-                  console.log(event.target.value);
                   setPrompt(event.target.value);
                 }}
                 autoFocus="autofocus"
@@ -100,12 +103,11 @@ const TextPromptView = (props) => {
             <Button
               className="mt-3 float-end"
               variant="secondary"
-              // onClick={console.log("Button Pressed")}
               onClick={sendGenerateRequest}
-            // onClick={sendGenerateRequest}
-            // disabled={textInput === ""}
+              // disabled={textInput === ""}
+              disabled={isGenerating}
             >
-              Generate 🪄
+              {isGenerating ? "Generating 🕐" : "Generate 🪄"}
             </Button>
           </Card.Body>
           : null}

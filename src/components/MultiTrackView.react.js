@@ -57,17 +57,15 @@ const MultiTrackView = (props) => {
       props.midiFile.tracks.forEach((track, idx) => {
         let inst = instrumentMap[track.instrument.number];
         if (!inst) {
-          inst = "marimba";
+          inst = "marimba"; // TODO : 없는 악기 marimba로 임시 대체했는데, 모든 미디 악기 분류해서 mapping 해주기
         }
-        const soundfontInstance = Soundfont.instrument(audioContext, inst).then(function (play) {
+        Soundfont.instrument(audioContext, inst).then(function (play) {
           setInstrumentObject((prev) => {
             return { ...prev, [idx]: play };
           });
         });
       })
-      console.log(instrumentObject)
     }
-
   }, [props.midiFile]);
 
   // 총 duration 시간 넘어가면 자동으로 재생 멈추게 하기
@@ -83,7 +81,6 @@ const MultiTrackView = (props) => {
     if (instrumentObject) {
       // 1. Solo가 켜 있을 때
       if (soloTrack.length > 0) {
-        console.log("Solo On case")
         Object.entries(instrumentObject).forEach(([idx, inst]) => {
           if (soloTrack.includes(Number(idx))) {
             inst.out.gain.value = 1
@@ -94,7 +91,6 @@ const MultiTrackView = (props) => {
       } else if (soloTrack.length == 0) {
         // 2-1. Solo가 꺼 있고, Mute는 켜 있을 때
         if (mutedTracks.length > 0) {
-          console.log("Solo Off, Mute On case")
           Object.entries(instrumentObject).forEach(([idx, inst]) => {
             if (mutedTracks.includes(Number(idx))) {
               inst.out.gain.value = 0
@@ -104,7 +100,6 @@ const MultiTrackView = (props) => {
           })
         } else if (mutedTracks.length == 0) {
           // 2-2. Solo도 꺼 있고, Mute도 꺼 있을 때
-          console.log("Solo Off, Mute Off case")
           Object.entries(instrumentObject).forEach(([idx, inst]) => {
             inst.out.gain.value = 1
           })
@@ -119,9 +114,7 @@ const MultiTrackView = (props) => {
 
   // Play Midi in soundfont instruments
   const playInstrument = () => {
-    // audioContext = new AudioContext();
     const acTime = audioContext.currentTime;
-    setCurrentTime((prev) => prev - 500);
 
     midiFile &&
       midiFile.tracks.forEach((track, idx) => {
@@ -138,15 +131,7 @@ const MultiTrackView = (props) => {
               duration: note.duration,
             });
         });
-        // const soundfontInstance = Soundfont.instrument(audioContext, inst).then(function (play) {
-        //   setInstrumentObject((prev) => {
-        //     return { ...prev, [idx]: play };
-        //   });
-        //   play.schedule(acTime + 0.5, notes_arr);
-        // });
-        // console.log(instrumentObject[idx])
-        console.log(acTime)
-        instrumentObject[idx].schedule(acTime + 0.5, notes_arr);
+        instrumentObject[idx].schedule(acTime, notes_arr);
       });
   };
 
@@ -334,8 +319,17 @@ const MultiTrackView = (props) => {
     <>
       <Row>
         <Col className="mt-3">
-          <Button variant="dark" onClick={handleClickPlay}>
+          <Button
+            variant="dark"
+            onClick={handleClickPlayInstrument}>
             {playing ? "PAUSE" : "PLAY"}
+          </Button>
+          <Button
+            className="ms-2"
+            variant="dark"
+            onClick={handleClickStopInstrument}>
+            ■
+            {/* STOP */}
           </Button>
           <Button
             className="ms-2"
@@ -360,17 +354,9 @@ const MultiTrackView = (props) => {
           </Button>
           <Button
             className="ms-2"
-            // disabled={playing}
             variant="dark"
-            onClick={handleClickPlayInstrument}>
-            {playing ? "PAUSE INST" : "PLAY INST"}
-          </Button>
-          <Button
-            className="ms-2"
-            variant="dark"
-            onClick={handleClickStopInstrument}>
-            {/* ■ */}
-            STOP INST
+            onClick={handleClickPlay}>
+            {playing ? "PAUSE" : "PLAY 8bit"}
           </Button>
         </Col>
       </Row>
@@ -399,6 +385,8 @@ const MultiTrackView = (props) => {
               handleNoteStyle={handleNoteStyle}
               setRegenTrackIdx={props.setRegenTrackIdx}
               setRegenInstNum={props.setRegenInstNum}
+              setRegenTrigger={props.setRegenTrigger}
+              isGenerating={props.isGenerating}
             />
           ) : null
         )
