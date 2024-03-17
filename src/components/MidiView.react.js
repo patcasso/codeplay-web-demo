@@ -46,19 +46,19 @@ const MidiView = (props) => {
     const [midiFileRaw, setMidiFileRaw] = useState();
     const [fileName, setFileName] = useState("Drag and drop MIDI file here (4 Bars only!)")
     const [sampleTitle, setSampleTitle] = useState("Sample MIDI");
-    const [regenTrackIdx, setRegenTrackIdx] = useState();
+    const [regenTrackIdx, setRegenTrackIdx] = useState(null);
     const [regenInstNum, setRegenInstNum] = useState();
     const [addInstNum, setAddInstNum] = useState();
     const [isGenerating, setIsGenerating] = useState(false);
     const [regenTrigger, setRegenTrigger] = useState(0);
 
-
     // 서버에서 생성해서 반환해준 미디 파일을 멀티트랙 뷰로 넘겨줌
     useEffect(() => {
         if (props.midiBlob) {
             try {
-                const newMidiFile = new Midi(props.midiBlob)
-                setMidiFile(newMidiFile)
+                const newMidiFile = new Midi(props.midiBlob);
+                console.log(newMidiFile);
+                setMidiFile(newMidiFile);
             } catch (error) {
                 console.error('Error parsing MIDI file:', error);
             }
@@ -80,7 +80,6 @@ const MidiView = (props) => {
         if (file) {
             try {
                 setMidiFileRaw(file);
-                console.log(midiFileRaw)
 
                 const arrayBuffer = await readFileAsArrayBuffer(file);
                 const midi = new Midi(arrayBuffer)
@@ -98,17 +97,14 @@ const MidiView = (props) => {
         if (midiFile) {
             try {
                 // Index에 해당하는 악기만 빼서 다시 정의
-                // console.log(midiFile)
                 const newMidi = midiFile.clone()
                 newMidi.tracks.splice(regenTrackIdx, 1);
-                // console.log(newMidi)
                 sendMidiToServer(newMidi, regenInstNum)
             } catch (error) {
                 console.error('Error Regenerating Single Instrument:', error)
             }
         }
     }
-
 
     // 미디 파일을 서버로 보낼 수 있는 함수
     const sendMidiToServer = (midi, instNum) => {
@@ -126,14 +122,24 @@ const MidiView = (props) => {
 
         // Make the POST request using fetch
         // fetch('http://0.0.0.0:8000/upload_midi/', {
-        fetch('http://223.130.162.67:8200/upload_midi/', { // 승백님 서버 주소
+        fetch('https://223.130.162.67:8200/upload_midi/', { // 승백님 서버 주소
             method: 'POST',
             body: formData,
         })
             .then(response => response.blob()) // .blob() 으로 response 받기 (TextPromptView 참조)
             .then((blob) => readFileAsArrayBuffer(blob))
             .then(arrayBuffer => {
-                props.setMidiBlob(arrayBuffer)
+                const midi = new Midi(arrayBuffer)
+                const lastTrack = midi.tracks[midi.tracks.length - 1]
+                const newMidi = midiFile.clone()
+                if (regenTrackIdx !== null) {
+                    newMidi.tracks[regenTrackIdx] = lastTrack;
+                    setMidiFile(newMidi);
+                    setRegenTrackIdx(null);
+                } else {
+                    newMidi.tracks.push(lastTrack);
+                    setMidiFile(newMidi);
+                }
                 setIsGenerating(false);
             })
             .catch(error => {
@@ -143,12 +149,11 @@ const MidiView = (props) => {
     }
 
     const handleClickAddInst = () => {
-        if (addInstNum) {
-            sendMidiToServer(midiFile, addInstNum)
-        } else {
-            // 특정 악기 정하지 않고 그냥 Add Track하는 경우 예외 처리하기
-            sendMidiToServer(midiFile, 999)
-        }
+            if (addInstNum >= -1 && addInstNum <= 127) {
+                sendMidiToServer(midiFile, addInstNum);
+            } else {
+                sendMidiToServer(midiFile, 999) // 특정 악기 정하지 않고 그냥 Add Track하는 경우 예외 처리
+            }
     }
 
     const handleDownloadMidi = () => {
@@ -162,7 +167,7 @@ const MidiView = (props) => {
                 // Create a download link
                 const downloadLink = document.createElement('a');
                 downloadLink.href = blobUrl;
-                downloadLink.download = `generated_midi.mid`; // Set the desired file name
+                downloadLink.download = `generated_midi.mid`;
 
                 // Append the link to the document body
                 document.body.appendChild(downloadLink);
@@ -173,7 +178,7 @@ const MidiView = (props) => {
                 // Remove the link from the document body
                 document.body.removeChild(downloadLink);
 
-                // Don't forget to revoke the Blob URL to free up resources
+                // Revoke the Blob URL to free up resources
                 URL.revokeObjectURL(blobUrl);
             } catch (error) {
                 console.error('Error downloading MIDI file:', error)
@@ -183,7 +188,7 @@ const MidiView = (props) => {
 
     const handleLoadSampleMidi = async (sampleMidiPath) => {
         const midiInstance = await Midi.fromUrl(sampleMidiPath);
-        setMidiFile(midiInstance)
+        setMidiFile(midiInstance);
     }
 
 
@@ -238,13 +243,6 @@ const MidiView = (props) => {
                                     <span>20th Century Stomp</span>
                                 </Dropdown.Item>
                             </DropdownButton>
-                            {/* <Button
-                                className="float-start"
-                                variant="outline-secondary"
-                                onClick={sendMidiToServer}
-                            >
-                                Send MIDI to Server
-                            </Button> */}
                             <Button
                                 className="float-start"
                                 variant="outline-dark"
@@ -256,10 +254,11 @@ const MidiView = (props) => {
                     </Row>
                     <MultiTrackView
                         midiFile={midiFile}
+                        isGenerating={isGenerating}
+                        setMidiFile={setMidiFile}
                         setRegenTrackIdx={setRegenTrackIdx}
                         setRegenInstNum={setRegenInstNum}
                         setRegenTrigger={setRegenTrigger}
-                        isGenerating={isGenerating}
                     />
                     {midiFile ?
                         <Row className="mt-3">
@@ -269,7 +268,7 @@ const MidiView = (props) => {
                                     <Form.Control
                                         type="number"
                                         placeholder="Inst No."
-                                        min="0"
+                                        min="-1"
                                         max="127"
                                         onChange={(event) => {
                                             setAddInstNum(event.target.valueAsNumber);
