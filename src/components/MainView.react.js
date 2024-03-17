@@ -21,6 +21,7 @@ const MainView = () => {
                 <Row>
                     <TextPromptView
                         arrWidth={arrWidth}
+                        midiBlob={midiBlob}
                         setMidiBlob={setMidiBlob}
                     />
                     <MidiView

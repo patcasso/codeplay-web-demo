@@ -37,7 +37,7 @@ const TextPromptView = (props) => {
     setIsGenerating(true);
     fetch(
       // "http://0.0.0.0:8000/generate/",
-      "http://223.130.162.67:8200/generate_midi/",
+      "https://223.130.162.67:8200/generate_midi/",
       {
         method: 'POST',
         headers: {
@@ -52,7 +52,6 @@ const TextPromptView = (props) => {
       .then((blob) => readFileAsArrayBuffer(blob))
       .then((arrayBuffer) => {
         props.setMidiBlob(arrayBuffer)
-        setPrompt("");
         setIsGenerating(false);
       })
       .catch((error) => {
@@ -62,6 +61,18 @@ const TextPromptView = (props) => {
       });
 
   };
+
+  const handleClickGenerate = () => {
+    if (props.midiBlob) {
+      if (window.confirm(`Delete current tracks and generate new tracks?`)) {
+        sendGenerateRequest();
+      } else {
+        return;
+      }
+    } else {
+      sendGenerateRequest();
+    }
+  }
 
   return (
     <Col
@@ -97,13 +108,20 @@ const TextPromptView = (props) => {
                 onChange={(event) => {
                   setPrompt(event.target.value);
                 }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    handleClickGenerate()
+                  } else if (event.key === "Escape") {
+                    setPrompt("")
+                  }
+                }}
                 autoFocus="autofocus"
               />
             </InputGroup>
             <Button
               className="mt-3 float-end"
               variant="secondary"
-              onClick={sendGenerateRequest}
+              onClick={handleClickGenerate}
               // disabled={textInput === ""}
               disabled={isGenerating}
             >

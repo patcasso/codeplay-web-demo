@@ -28,8 +28,7 @@ const MultiTrackView = (props) => {
   const [soloTrack, setSoloTrack] = useState([]);
   const [mutedTracks, setMutedTracks] = useState([]);
   const [instrumentObject, setInstrumentObject] = useState({});
-
-
+  
   // currentTime 업데이트
   useEffect(() => {
     let intervalId;
@@ -56,8 +55,11 @@ const MultiTrackView = (props) => {
       );
       props.midiFile.tracks.forEach((track, idx) => {
         let inst = instrumentMap[track.instrument.number];
+
         if (!inst) {
-          inst = "marimba"; // TODO : 없는 악기 marimba로 임시 대체했는데, 모든 미디 악기 분류해서 mapping 해주기
+          inst = "acoustic_grand_piano"; // TODO : 없는 악기 piano로 임시 대체했는데, 모든 미디 악기 분류해서 mapping 해주기
+        } else if (track.instrument.percussion === true) {
+          inst = "synth_drum" // Drum 일단 대체
         }
         Soundfont.instrument(audioContext, inst).then(function (play) {
           setInstrumentObject((prev) => {
@@ -72,7 +74,7 @@ const MultiTrackView = (props) => {
   useEffect(() => {
     if (currentTime >= totalMs) {
       setPlaying(false);
-      // setCurrentTime(0);
+      setCurrentTime(0);
     }
   });
 
@@ -195,10 +197,9 @@ const MultiTrackView = (props) => {
   };
 
   const removeTrack = (trackNum) => {
-    console.log(`Track ${trackNum} Removed`);
-    const newMidi = { ...midiFile };
+    const newMidi = midiFile.clone()
     newMidi.tracks.splice(trackNum, 1);
-    setMidiFile(newMidi);
+    props.setMidiFile(newMidi);
   };
 
 
@@ -387,6 +388,7 @@ const MultiTrackView = (props) => {
               setRegenInstNum={props.setRegenInstNum}
               setRegenTrigger={props.setRegenTrigger}
               isGenerating={props.isGenerating}
+              instrumentTrack={instrumentObject[idx]}
             />
           ) : null
         )

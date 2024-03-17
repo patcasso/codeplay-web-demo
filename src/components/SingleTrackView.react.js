@@ -7,7 +7,6 @@ import Button from "react-bootstrap/Button";
 const SingleTrackView = (props) => {
 
     const handleClickRegenerate = () => {
-        // console.log(`regen track ${props.idx}`)
         props.setRegenTrackIdx(props.idx);
         props.setRegenInstNum(props.track.instrument.number);
         props.setRegenTrigger((prev) => prev + 1);
@@ -79,8 +78,7 @@ const SingleTrackView = (props) => {
                 <Button
                     size="sm"
                     onClick={handleClickRegenerate}
-                    // variant="outline-primary"
-                    disabled={props.isGenerating}
+                    disabled={props.isGenerating || props.playing}
                 >
                     ↺
                 </Button>
