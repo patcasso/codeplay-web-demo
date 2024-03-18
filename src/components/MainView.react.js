@@ -17,7 +17,7 @@ const MainView = () => {
     return (
         <>
             <NavigationBar />
-            <Container fluid className="p-5">
+            <Container fluid className="p-4">
                 <Row>
                     <TextPromptView
                         arrWidth={arrWidth}

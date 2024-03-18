@@ -11,9 +11,18 @@ import Soundfont from "soundfont-player";
 import * as Tone from "tone";
 
 import { instrumentMap } from "../utils/InstrumentList";
+import { trackColorsArray } from "../utils/trackColors.js";
+import { notePositions } from "../utils/notePositions.js";
 
 const BEATS_PER_BAR = 4;
 const NUM_BARS = 4;
+
+const progressBarStyle = {
+  backgroundColor: "#35a64a",
+  // border: "1.5px solid #529e67",
+  borderRadius: "7px"
+  // height: "3vh"
+}
 
 // 페이지를 로드할 때 하나의 AudioContext 만들어 시간을 추적하며 계속해서 사용
 const audioContext = new AudioContext();
@@ -28,7 +37,7 @@ const MultiTrackView = (props) => {
   const [soloTrack, setSoloTrack] = useState([]);
   const [mutedTracks, setMutedTracks] = useState([]);
   const [instrumentObject, setInstrumentObject] = useState({});
-  
+
   // currentTime 업데이트
   useEffect(() => {
     let intervalId;
@@ -202,6 +211,10 @@ const MultiTrackView = (props) => {
     props.setMidiFile(newMidi);
   };
 
+  const assignTrackColor = (idx) => {
+    return trackColorsArray[idx % trackColorsArray.length]
+  }
+
 
   // ==== Event Handlers ======
 
@@ -252,7 +265,7 @@ const MultiTrackView = (props) => {
     }
   };
 
-  const handleNoteStyle = (idx, time, duration, nextStartTime) => {
+  const handleNoteStyle = (idx, time, duration, nextStartTime, pitch) => {
     let marginLeft;
     const currentTimeSec = currentTime / 1000;
     const widthPercent = (((nextStartTime - time) * 1000) / totalMs) * 100;
@@ -265,16 +278,22 @@ const MultiTrackView = (props) => {
 
     if (time < currentTimeSec && currentTimeSec <= nextStartTime) {
       return {
-        color: "red",
+        position: "relative",
+        color: "#eb4b5d",
         padding: "0px",
+        height:"15%",
+        bottom: `${notePositions[pitch]}%`,
         marginLeft: `${marginLeft}%`,
         width: `${widthPercent}%`,
         float: "left",
       };
     } else {
       return {
+        position: "relative",
         color: "white",
         padding: "0px",
+        height:"15%",
+        bottom: `${notePositions[pitch]}%`,
         marginLeft: `${marginLeft}%`,
         width: `${widthPercent}%`,
         float: "left",
@@ -283,7 +302,7 @@ const MultiTrackView = (props) => {
   };
 
   const handleProgressBar = () => {
-    return { color: "yellow", marginLeft: `${(currentTime / totalMs) * 100}%` };
+    return { color: "white", marginLeft: `${(currentTime / totalMs) * 100}%` };
   };
 
   const handleSoloButton = (idx) => {
@@ -354,7 +373,7 @@ const MultiTrackView = (props) => {
             ▶▶
           </Button>
           <Button
-            className="ms-2"
+            className="ms-2 float-middle"
             variant="dark"
             onClick={handleClickPlay}>
             {playing ? "PAUSE" : "PLAY 8bit"}
@@ -363,36 +382,37 @@ const MultiTrackView = (props) => {
       </Row>
       <Row className="mt-3" style={{ color: "gray" }}>
         <Col xs={2}>Current Time: {(currentTime / 1000).toFixed(1)} (s)</Col>
-        <Col xs={9} style={{ backgroundColor: "green" }} className="mb-2">
+        <Col xs={9} style={progressBarStyle} className="mb-2">
           <div style={handleProgressBar()}>▼</div>
         </Col>
         <Col xs={1}>
         </Col>
       </Row>
-      {midiFile
-        ? midiFile.tracks.map((track, idx) =>
-          track.notes.length > 0 ? ( // note가 있는 트랙만 표시
-            <SingleTrackView
-              key={idx}
-              idx={idx}
-              track={track}
-              playing={playing}
-              totalMs={totalMs}
-              soloTrack={soloTrack}
-              mutedTracks={mutedTracks}
-              handleClickRemove={handleClickRemove}
-              handleSoloButton={handleSoloButton}
-              handleMuteButton={handleMuteButton}
-              handleNoteStyle={handleNoteStyle}
-              setRegenTrackIdx={props.setRegenTrackIdx}
-              setRegenInstNum={props.setRegenInstNum}
-              setRegenTrigger={props.setRegenTrigger}
-              isGenerating={props.isGenerating}
-              instrumentTrack={instrumentObject[idx]}
-            />
-          ) : null
-        )
-        : null}
+        {midiFile
+          ? midiFile.tracks.map((track, idx) =>
+            track.notes.length > 0 ? ( // note가 있는 트랙만 표시
+              <SingleTrackView
+                key={idx}
+                idx={idx}
+                color={assignTrackColor(idx)}
+                track={track}
+                playing={playing}
+                totalMs={totalMs}
+                soloTrack={soloTrack}
+                mutedTracks={mutedTracks}
+                handleClickRemove={handleClickRemove}
+                handleSoloButton={handleSoloButton}
+                handleMuteButton={handleMuteButton}
+                handleNoteStyle={handleNoteStyle}
+                setRegenTrackIdx={props.setRegenTrackIdx}
+                setRegenInstNum={props.setRegenInstNum}
+                setRegenTrigger={props.setRegenTrigger}
+                isGenerating={props.isGenerating}
+                instrumentTrack={instrumentObject[idx]}
+              />
+            ) : null
+          )
+          : null}
     </>
   );
 };
