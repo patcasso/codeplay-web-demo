@@ -266,6 +266,7 @@ const MultiTrackView = (props) => {
   };
 
   const handleNoteStyle = (idx, time, duration, nextStartTime, pitch) => {
+    // console.log(pitch)
     let marginLeft;
     const currentTimeSec = currentTime / 1000;
     const widthPercent = (((nextStartTime - time) * 1000) / totalMs) * 100;
