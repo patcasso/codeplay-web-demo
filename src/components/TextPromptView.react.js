@@ -62,6 +62,37 @@ const TextPromptView = (props) => {
 
   };
 
+  const sendLambdaRequest = () => {
+    setIsGenerating(true);
+    fetch(
+      // "http://0.0.0.0:8000/generate/",
+      "https://zab3ww1o85.execute-api.ap-northeast-2.amazonaws.com/default/codeplayGenerateFromPrompt",
+      {
+        method: 'POST',
+        headers: {
+          "Content-Type": "application/json",
+          // "x-api-key": "srCLnpGgZW4bovH9rgvWs6NVJkGaxKhi1KkIRZOb"
+        },
+        body: JSON.stringify({
+          "prompt": prompt,
+        }),
+      }
+    )
+      .then((response) => console.log(response))
+      // .then((response) => response.blob())
+      // .then((blob) => readFileAsArrayBuffer(blob))
+      // .then((arrayBuffer) => {
+      //   props.setMidiBlob(arrayBuffer)
+      //   setIsGenerating(false);
+      // })
+      .catch((error) => {
+        console.error(error);
+        alert(`Something went wrong. Please try again! \n\n[Error Message]\n${error}`)
+        setIsGenerating(false);
+      });
+
+  };
+
   const handleClickGenerate = () => {
     if (props.midiBlob) {
       if (window.confirm(`Delete current tracks and generate new tracks?`)) {
@@ -127,6 +158,15 @@ const TextPromptView = (props) => {
             >
               {isGenerating ? "Generating 🕐" : "Generate 🪄"}
             </Button>
+            {/* <Button
+              className="mt-3 me-2 float-end"
+              variant="danger"
+              onClick={sendLambdaRequest}
+              // disabled={textInput === ""}
+              disabled={isGenerating}
+            >
+              Lambda Request
+            </Button> */}
           </Card.Body>
           : null}
       </Card>

@@ -276,7 +276,8 @@ const MidiView = (props) => {
                                     />
                                     <Button
                                         className="float-"
-                                        variant="outline-success"
+                                        variant="outline-primary"
+                                        // variant="dark"
                                         onClick={handleClickAddInst}
                                         disabled={isGenerating}
                                     >
