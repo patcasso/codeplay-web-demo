@@ -8,7 +8,7 @@ import Col from 'react-bootstrap/Col';
 import InputGroup from 'react-bootstrap/InputGroup';
 import Button from 'react-bootstrap/Button';
 
-// import { Midi } from '@tonejs/midi'
+import { Midi } from '@tonejs/midi'
 
 // Server에서 받은 파일 ArrayBuffer로 저장
 const readFileAsArrayBuffer = (file) => {
@@ -51,6 +51,7 @@ const TextPromptView = (props) => {
       .then((response) => response.blob())
       .then((blob) => readFileAsArrayBuffer(blob))
       .then((arrayBuffer) => {
+        console.log(arrayBuffer)
         props.setMidiBlob(arrayBuffer)
         setIsGenerating(false);
       })
@@ -71,6 +72,7 @@ const TextPromptView = (props) => {
         method: 'POST',
         headers: {
           "Content-Type": "application/json",
+          "Accept": "*/*"
           // "x-api-key": "srCLnpGgZW4bovH9rgvWs6NVJkGaxKhi1KkIRZOb"
         },
         body: JSON.stringify({
@@ -78,13 +80,85 @@ const TextPromptView = (props) => {
         }),
       }
     )
-      .then((response) => console.log(response))
-      // .then((response) => response.blob())
-      // .then((blob) => readFileAsArrayBuffer(blob))
-      // .then((arrayBuffer) => {
-      //   props.setMidiBlob(arrayBuffer)
-      //   setIsGenerating(false);
-      // })
+      .then((response) => {
+        console.log(response.body);
+        
+        const reader = response.body.getReader();
+        let receivedData = ''; // Variable to store the received data
+
+        // Define a function to recursively read the response body
+        function readResponseBody(reader) {
+          return reader.read().then(async ({ done, value }) => {
+            if (done) {
+              console.log('Response body fully received');
+              console.log('Received data:', receivedData); // Access the received data here
+              // console.log(receivedData.split(","))
+
+              // const blob = new Blob([receivedData])
+              // console.log(`blob: ${blob}`)
+              try {
+                // const arrayBuffer = await readFileAsArrayBuffer(blob);
+                // console.log(`arrayBuffer: ${arrayBuffer}`);
+
+                // props.setMidiBlob(arrayBuffer);
+              } catch (error) {
+                console.error('Error reading file as array buffer:', error);
+              }
+              return;
+            }
+
+            // Process the received chunk of data (value) here
+            console.log('Received chunk of data:', value);
+
+            // Uint8Array 디코딩
+            const string = new TextDecoder().decode(value);
+            let modifiedStr = string.substring(1, string.length - 1);
+            console.log(modifiedStr)
+
+            const dataURI = `data:audio/midi;base64,${modifiedStr}`
+            const dataURItoBlob = (dataURI) => {
+              
+              const byteString = atob(dataURI.split(',')[1]);
+              const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+            
+              let ab = new ArrayBuffer(byteString.length);
+              let ia = new Uint8Array(ab);
+              for (let i = 0; i < byteString.length; i++) {
+                ia[i] = byteString.charCodeAt(i);
+              }
+            
+              return new Blob([ab], {type: mimeString});
+            };
+
+            console.log(dataURItoBlob(dataURI));
+            const arrayBuffer = await readFileAsArrayBuffer(dataURItoBlob(dataURI));
+            console.log(arrayBuffer)
+            props.setMidiBlob(arrayBuffer);
+            
+  
+
+            // base64 디코딩
+            console.log(atob(modifiedStr))
+            const midi = new Midi(atob(modifiedStr))
+            // console.log(midi)
+
+            // props.setMidiBlob(atob(modifiedStr));
+
+            receivedData += value;
+
+            // Continue reading the next chunk of data
+            return readResponseBody(reader);
+          }).catch((error) => {
+            console.error('Error reading response body:', error);
+          });
+        }
+
+        // Start reading the response body
+        readResponseBody(reader);
+        // response.json()
+        setIsGenerating(false)
+        
+      })
       .catch((error) => {
         console.error(error);
         alert(`Something went wrong. Please try again! \n\n[Error Message]\n${error}`)
@@ -158,7 +232,7 @@ const TextPromptView = (props) => {
             >
               {isGenerating ? "Generating 🕐" : "Generate 🪄"}
             </Button>
-            {/* <Button
+            <Button
               className="mt-3 me-2 float-end"
               variant="danger"
               onClick={sendLambdaRequest}
@@ -166,7 +240,7 @@ const TextPromptView = (props) => {
               disabled={isGenerating}
             >
               Lambda Request
-            </Button> */}
+            </Button>
           </Card.Body>
           : null}
       </Card>
