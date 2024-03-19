@@ -8,7 +8,6 @@ const SingleTrackView = (props) => {
 
     const trackAreaStyle = {
         backgroundColor: props.color,
-        // height: '7vh',
         height: '7vh',
         borderRadius: '10px',
         marginBottom: '7px',
@@ -33,15 +32,6 @@ const SingleTrackView = (props) => {
             <Col xs={1} className="d-flex align-items-center">
                 <Button
                     className="float-end"
-                    disabled={props.playing}
-                    variant="outline-danger"
-                    onClick={() => props.handleClickRemove(props.idx)}
-                    size="sm"
-                >
-                    X
-                </Button>
-                <Button
-                    className="float-end"
                     variant="outline-primary"
                     onClick={() => props.handleSoloButton(props.idx)}
                     active={props.soloTrack.includes(props.idx)}
@@ -58,13 +48,20 @@ const SingleTrackView = (props) => {
                 >
                     M
                 </Button>
+                <Button
+                    className="float-end"
+                    disabled={props.playing}
+                    variant="outline-danger"
+                    onClick={() => props.handleClickRemove(props.idx)}
+                    size="sm"
+                >
+                    X
+                </Button>
             </Col>
             <Col xs={9}>
-                {/* Notes : {JSON.stringify(track.notes)} */}
                 <Row
                     // className="p-2 d-flex align-items-center"
                     className="p-1 d-flex"
-                    // className="p-0 d-flex"
                     style={trackAreaStyle}>
                     <div style={{ height: "100%", position: "relative", display: "flex", alignItems: "flex-end" }}>
                         {props.track.notes.map((note, idx) => (

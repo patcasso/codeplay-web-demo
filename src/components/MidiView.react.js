@@ -13,7 +13,7 @@ import InputGroup from 'react-bootstrap/InputGroup';
 
 import MultiTrackView from './MultiTrackView.react.js'
 
-import { Midi, Buffer } from '@tonejs/midi'
+import { Midi } from '@tonejs/midi'
 
 
 // Drag & Drop event handler
@@ -57,7 +57,6 @@ const MidiView = (props) => {
         if (props.midiBlob) {
             try {
                 const newMidiFile = new Midi(props.midiBlob);
-                console.log(newMidiFile);
                 setMidiFile(newMidiFile);
             } catch (error) {
                 console.error('Error parsing MIDI file:', error);
@@ -99,48 +98,85 @@ const MidiView = (props) => {
                 // Index에 해당하는 악기만 빼서 다시 정의
                 const newMidi = midiFile.clone()
                 newMidi.tracks.splice(regenTrackIdx, 1);
-                sendMidiToServer(newMidi, regenInstNum)
+                sendMidiToServerLambda(newMidi, regenInstNum);
             } catch (error) {
                 console.error('Error Regenerating Single Instrument:', error)
             }
         }
     }
 
-    // 미디 파일을 서버로 보낼 수 있는 함수
-    const sendMidiToServer = (midi, instNum) => {
+    // 현재 MIDI File을 서버에 보내고, 추가 혹은 수정된 미디 파일을 받는 함수
+    const sendMidiToServerLambda = (midi, instNum) => {
         setIsGenerating(true);
 
         // Create FormData object
-        const formData = new FormData();
         const midiArray = midi.toArray()
-        const midiBlob = new Blob([midiArray])
-
-        formData.append('midi_file', midiBlob, fileName);
-
-        // 서버에서 실행할 Task 종류와, 생성할 악기 번호를 제공
-        formData.append('instnum', instNum)
+        const base64Data = btoa(String.fromCharCode.apply(null, midiArray));
 
         // Make the POST request using fetch
-        // fetch('http://0.0.0.0:8000/upload_midi/', {
-        fetch('https://223.130.162.67:8200/upload_midi/', { // 승백님 서버 주소
+        fetch("https://gtwdvfyoj9.execute-api.ap-northeast-2.amazonaws.com/default/codeplaySendMidiToServer", { // AWS API Gateway Endpoint
             method: 'POST',
-            body: formData,
+            headers: { "Content-Type": 'application/json', "Accept": "*/*" },
+            body: JSON.stringify({
+                "midi": base64Data,
+                "instnum": instNum,
+            })
         })
-            .then(response => response.blob()) // .blob() 으로 response 받기 (TextPromptView 참조)
-            .then((blob) => readFileAsArrayBuffer(blob))
-            .then(arrayBuffer => {
-                const midi = new Midi(arrayBuffer)
-                const lastTrack = midi.tracks[midi.tracks.length - 1]
-                const newMidi = midiFile.clone()
-                if (regenTrackIdx !== null) {
-                    newMidi.tracks[regenTrackIdx] = lastTrack;
-                    setMidiFile(newMidi);
-                    setRegenTrackIdx(null);
-                } else {
-                    newMidi.tracks.push(lastTrack);
-                    setMidiFile(newMidi);
+            .then((response) => {
+                const reader = response.body.getReader();
+                let receivedData = ''; // Variable to store the received data
+
+                // Define a function to recursively read the response body
+                function readResponseBody(reader) {
+                    return reader.read().then(async ({ done, value }) => {
+                        if (done) {
+                            console.log('Response body fully received');
+                            try {
+                                console.log(value)
+                            } catch (error) {
+                                console.error('Error reading file as array buffer:', error);
+                            }
+                            return;
+                        }
+
+                        // Process the received chunk of data (value) here
+                        // console.log('Received chunk of data:', value);
+
+                        // Uint8Array 디코딩
+                        const string = new TextDecoder().decode(value);
+                        let modifiedStr = string.substring(1, string.length - 1);
+
+                        const dataURI = `data:audio/midi;base64,${modifiedStr}`
+                        const dataURItoBlob = (dataURI) => {
+                          
+                          const byteString = atob(dataURI.split(',')[1]);
+                          const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+                        
+                          let ab = new ArrayBuffer(byteString.length);
+                          let ia = new Uint8Array(ab);
+                          for (let i = 0; i < byteString.length; i++) {
+                            ia[i] = byteString.charCodeAt(i);
+                          }
+                        
+                          return new Blob([ab], {type: mimeString});
+                        };
+
+                        const arrayBuffer = await readFileAsArrayBuffer(dataURItoBlob(dataURI));
+                        props.setMidiBlob(arrayBuffer);
+
+                        receivedData += value;
+
+                        // Continue reading the next chunk of data
+                        return readResponseBody(reader);
+                    }).catch((error) => {
+                        console.error('Error reading response body:', error);
+                    });
                 }
-                setIsGenerating(false);
+
+                // Start reading the response body
+                readResponseBody(reader);
+                setIsGenerating(false)
+
             })
             .catch(error => {
                 alert(`Something went wrong. Please try again! \n\n[Error Message]\n${error}`)
@@ -149,11 +185,12 @@ const MidiView = (props) => {
     }
 
     const handleClickAddInst = () => {
-            if (addInstNum >= -1 && addInstNum <= 127) {
-                sendMidiToServer(midiFile, addInstNum);
-            } else {
-                sendMidiToServer(midiFile, 999) // 특정 악기 정하지 않고 그냥 Add Track하는 경우 예외 처리
-            }
+        if (addInstNum >= -1 && addInstNum <= 127) {
+            sendMidiToServerLambda(midiFile, addInstNum);
+        } else {
+            // 특정 악기 정하지 않고 그냥 Add Track하는 경우 예외 처리
+            sendMidiToServerLambda(midiFile, 999);
+        }
     }
 
     const handleDownloadMidi = () => {
@@ -190,8 +227,6 @@ const MidiView = (props) => {
         const midiInstance = await Midi.fromUrl(sampleMidiPath);
         setMidiFile(midiInstance);
     }
-
-
 
     return (
         <Col xs={props.arrWidth}>
@@ -230,7 +265,7 @@ const MidiView = (props) => {
                                         setSampleTitle("Body N Soul");
                                     }}
                                 >
-                                    <span>Body And Soul</span>
+                                    <span>Jazz - Body And Soul</span>
                                 </Dropdown.Item>
                                 <Dropdown.Item
                                     as="button"
@@ -240,7 +275,7 @@ const MidiView = (props) => {
                                         setSampleTitle("20th Century Stomp");
                                     }}
                                 >
-                                    <span>20th Century Stomp</span>
+                                    <span>Jazz - 20th Century Stomp</span>
                                 </Dropdown.Item>
                             </DropdownButton>
                             <Button
@@ -277,7 +312,6 @@ const MidiView = (props) => {
                                     <Button
                                         className="float-"
                                         variant="outline-primary"
-                                        // variant="dark"
                                         onClick={handleClickAddInst}
                                         disabled={isGenerating}
                                     >
