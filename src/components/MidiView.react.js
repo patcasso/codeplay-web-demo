@@ -118,6 +118,9 @@ const MidiView = (props) => {
             body: JSON.stringify({
                 "midi": base64Data,
                 "instnum": instNum,
+                "emotion": props.generateConditions.emotion,
+                "tempo": props.generateConditions.tempo,
+                "genre": props.generateConditions.genre
             })
         })
             .then((response) => {
@@ -128,9 +131,10 @@ const MidiView = (props) => {
                 function readResponseBody(reader) {
                     return reader.read().then(async ({ done, value }) => {
                         if (done) {
-                            console.log('Response body fully received');
+                            // console.log('Response body fully received');
                             try {
-                                console.log(value)
+                                // console.log(value)
+                                console.log("Response body fully received");
                             } catch (error) {
                                 console.error('Error reading file as array buffer:', error);
                             }
@@ -184,14 +188,14 @@ const MidiView = (props) => {
                         console.error('Error reading response body:', error);
                     });
                 }
-
                 // Start reading the response body
                 readResponseBody(reader);
                 setIsGenerating(false)
 
             })
             .catch(error => {
-                alert(`Something went wrong. Please try again! \n\n[Error Message]\n${error}`)
+                props.setShowErrorModal(true);
+                props.setErrorLog(error.message);
                 setIsGenerating(false);
             });
     }
@@ -275,6 +279,13 @@ const MidiView = (props) => {
                             >
                                 Download Current MIDI
                             </Button>
+                            {/* <Button
+                                className="float-start ms-2"
+                                variant="danger"
+                                onClick={() => { props.setShowErrorModal(true) }}
+                            >
+                                Error!
+                            </Button> */}
                         </Col>
                     </Row>
                     <MultiTrackView
