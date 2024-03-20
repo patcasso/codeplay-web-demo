@@ -3,7 +3,7 @@ import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 import NavDropdown from 'react-bootstrap/NavDropdown';
 
-function NavBar() {
+function NavBar(props) {
     return (
         <Navbar style={{ backgroundColor: "#A181FD" }} data-bs-theme="dark">
             <Container className="p-1 ms-4">
@@ -21,7 +21,10 @@ function NavBar() {
                 <Navbar.Collapse id="basic-navbar-nav">
                     <Nav className="me-auto">
                         <Nav.Link href="#home">Templates</Nav.Link>
-                        <Nav.Link href="#link">Tutorial</Nav.Link>
+                        <Nav.Link
+                            onClick={() => { props.setShowTutorialModal(true) }}
+                            // href="#link"
+                        >Tutorial</Nav.Link>
                         <NavDropdown title="Menu" id="basic-nav-dropdown">
                             <NavDropdown.Item href="#action/3.1">Action</NavDropdown.Item>
                             <NavDropdown.Item href="#action/3.2">

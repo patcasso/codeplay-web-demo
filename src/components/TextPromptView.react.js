@@ -53,10 +53,9 @@ const TextPromptView = (props) => {
         function readResponseBody(reader) {
           return reader.read().then(async ({ done, value }) => {
             if (done) {
-              console.log('Response body fully received');
               // console.log('Received data:', receivedData); // Access the received data here
               try {
-                console.log(value);
+                console.log('Response body fully received');
               } catch (error) {
                 console.error('Error reading file as array buffer:', error);
               }
@@ -64,23 +63,30 @@ const TextPromptView = (props) => {
             }
 
             // Uint8Array 디코딩
+
             const string = new TextDecoder().decode(value);
-            let modifiedStr = string.substring(1, string.length - 1);
+            const responseJson = JSON.parse(string);
+            const conditions = responseJson.condition;
+            const [ emotion, tempo, genre ] = [conditions[0], conditions[1], conditions[2]]
+            props.setGenerateConditions((prev) => {
+              return { ...prev, ['emotion']: emotion, ['tempo']: tempo, ['genre']: genre };
+            });
+            const fileContent = responseJson.file_content;
 
             // Blob 생성
-            const dataURI = `data:audio/midi;base64,${modifiedStr}`
+            const dataURI = `data:audio/midi;base64,${fileContent}`
             const dataURItoBlob = (dataURI) => {
-              
+
               const byteString = atob(dataURI.split(',')[1]);
               const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
-            
+
               let ab = new ArrayBuffer(byteString.length);
               let ia = new Uint8Array(ab);
               for (let i = 0; i < byteString.length; i++) {
                 ia[i] = byteString.charCodeAt(i);
               }
-            
-              return new Blob([ab], {type: mimeString});
+
+              return new Blob([ab], { type: mimeString });
             };
 
             const arrayBuffer = await readFileAsArrayBuffer(dataURItoBlob(dataURI));
@@ -103,7 +109,8 @@ const TextPromptView = (props) => {
       })
       .catch((error) => {
         console.error(error);
-        alert(`Something went wrong. Please try again! \n\n[Error Message]\n${error}`)
+        props.setShowErrorModal(true);
+        props.setErrorLog(error.message);
         setIsGenerating(false);
       });
 
@@ -112,13 +119,13 @@ const TextPromptView = (props) => {
   const handleClickGenerate = () => {
     if (props.midiBlob) {
       if (window.confirm(`Delete current tracks and generate new tracks?`)) {
-        // sendGenerateRequest();
+        props.setGenerateConditions({})
         sendLambdaRequest();
       } else {
         return;
       }
     } else {
-      // sendGenerateRequest();
+      props.setGenerateConditions({})
       sendLambdaRequest();
     }
   }
@@ -173,7 +180,7 @@ const TextPromptView = (props) => {
               onClick={handleClickGenerate}
               disabled={isGenerating}
             >
-              {isGenerating ? "Generating 🕐" : "Generate 🪄"}
+              {isGenerating ? "Generating..." : "Generate"}
             </Button>
           </Card.Body>
           : null}

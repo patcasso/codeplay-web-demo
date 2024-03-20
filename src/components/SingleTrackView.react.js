@@ -4,6 +4,8 @@ import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Button from "react-bootstrap/Button";
 
+import { getIconName } from "../utils/IconMapping";
+
 const SingleTrackView = (props) => {
 
     const trackAreaStyle = {
@@ -22,12 +24,23 @@ const SingleTrackView = (props) => {
         props.setRegenTrackIdx(props.idx);
         props.setRegenTrigger((prev) => prev + 1);
     }
+    let instNum;
+    if (props.track.instrument.percussion === true) {
+        instNum = -1;
+    } else {
+        instNum = props.track.instrument.number;
+    }
+    
+    // console.log(instNum);
+    // console.log(getIconName(instNum));
+
 
     return (
         <Row key={props.idx}>
+            {/* <Col xs={1} className="d-flex align-items-center"> */}
             <Col xs={1} className="d-flex align-items-center">
                 <div className="me-2">
-                    {props.idx}
+                    <img src={`./inst_icons/${getIconName(instNum)}.png`} width="25px" />
                 </div>
                 <div>
                     {props.track.name}
