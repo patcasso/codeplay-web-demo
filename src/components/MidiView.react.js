@@ -5,13 +5,11 @@ import Card from 'react-bootstrap/Card';
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col';
 import Button from "react-bootstrap/Button";
-import ButtonGroup from "react-bootstrap/ButtonGroup";
-import Dropdown from "react-bootstrap/Dropdown";
-import DropdownButton from "react-bootstrap/DropdownButton";
 import Form from 'react-bootstrap/Form';
 import InputGroup from 'react-bootstrap/InputGroup';
 
 import MultiTrackView from './MultiTrackView.react.js'
+import SampleMidiDropdown from "./SampleMidiDropdown.js";
 
 import { Midi } from '@tonejs/midi'
 
@@ -148,21 +146,35 @@ const MidiView = (props) => {
 
                         const dataURI = `data:audio/midi;base64,${modifiedStr}`
                         const dataURItoBlob = (dataURI) => {
-                          
-                          const byteString = atob(dataURI.split(',')[1]);
-                          const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
-                        
-                          let ab = new ArrayBuffer(byteString.length);
-                          let ia = new Uint8Array(ab);
-                          for (let i = 0; i < byteString.length; i++) {
-                            ia[i] = byteString.charCodeAt(i);
-                          }
-                        
-                          return new Blob([ab], {type: mimeString});
+
+                            const byteString = atob(dataURI.split(',')[1]);
+                            const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+
+                            let ab = new ArrayBuffer(byteString.length);
+                            let ia = new Uint8Array(ab);
+                            for (let i = 0; i < byteString.length; i++) {
+                                ia[i] = byteString.charCodeAt(i);
+                            }
+
+                            return new Blob([ab], { type: mimeString });
                         };
 
                         const arrayBuffer = await readFileAsArrayBuffer(dataURItoBlob(dataURI));
-                        props.setMidiBlob(arrayBuffer);
+                        // props.setMidiBlob(arrayBuffer);
+
+                        const midi = new Midi(arrayBuffer)
+                        const lastTrack = midi.tracks[midi.tracks.length - 1]
+                        const newMidi = midiFile.clone()
+
+                        if (regenTrackIdx !== null) {
+                            newMidi.tracks[regenTrackIdx] = lastTrack;
+                            setMidiFile(newMidi);
+                            setRegenTrackIdx(null);
+                        } else {
+                            newMidi.tracks.push(lastTrack);
+                            setMidiFile(newMidi);
+                        }
+                        setIsGenerating(false);
 
                         receivedData += value;
 
@@ -251,33 +263,11 @@ const MidiView = (props) => {
                     </div>
                     <Row className="mt-2">
                         <Col>
-                            <DropdownButton
-                                as={ButtonGroup}
-                                className="float-end"
-                                title={sampleTitle}
-                                variant="outline-dark"
-                            >
-                                <Dropdown.Item
-                                    as="button"
-                                    key="0"
-                                    onClick={() => {
-                                        handleLoadSampleMidi("./bodynsoul_sample.mid");
-                                        setSampleTitle("Body N Soul");
-                                    }}
-                                >
-                                    <span>Jazz - Body And Soul</span>
-                                </Dropdown.Item>
-                                <Dropdown.Item
-                                    as="button"
-                                    key="1"
-                                    onClick={() => {
-                                        handleLoadSampleMidi("./twentieth_sample.mid");
-                                        setSampleTitle("20th Century Stomp");
-                                    }}
-                                >
-                                    <span>Jazz - 20th Century Stomp</span>
-                                </Dropdown.Item>
-                            </DropdownButton>
+                            <SampleMidiDropdown
+                                sampleTitle={sampleTitle}
+                                handleLoadSampleMidi={handleLoadSampleMidi}
+                                setSampleTitle={setSampleTitle}
+                            />
                             <Button
                                 className="float-start"
                                 variant="outline-dark"

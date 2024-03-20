@@ -14,8 +14,12 @@ const SingleTrackView = (props) => {
         alignItems: "flex-end"
     }
     const handleClickRegenerate = () => {
+        if (props.track.instrument.percussion === true) {
+            props.setRegenInstNum(-1);
+        } else {
+            props.setRegenInstNum(props.track.instrument.number);
+        }
         props.setRegenTrackIdx(props.idx);
-        props.setRegenInstNum(props.track.instrument.number);
         props.setRegenTrigger((prev) => prev + 1);
     }
 
