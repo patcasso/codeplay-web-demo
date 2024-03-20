@@ -54,22 +54,29 @@ const MultiTrackView = (props) => {
   // midiFile prop 내려오면 멀티트랙으로 적용시키기
   useEffect(() => {
     if (props.midiFile) {
+      // 시간 정보 추출 및 계산
+      const msPerBeatValue = (60 * 1000) / props.midiFile.header.tempos[0].bpm;
+      const totalMsCalculated = msPerBeatValue * BEATS_PER_BAR * NUM_BARS;
+
+      // MIDI File 및 시간 정보 적용
       setMidiFile(props.midiFile);
       setCurrentTime(0);
-      setMsPerBeat((60 * 1000) / props.midiFile.header.tempos[0].bpm);
-      setTotalMs(
-        ((60 * 1000) / props.midiFile.header.tempos[0].bpm) *
-        BEATS_PER_BAR *
-        NUM_BARS
-      );
+      setMsPerBeat(msPerBeatValue);
+      setTotalMs(totalMsCalculated);
+
+      console.log(props.midiFile)
+
+      // instrumentObject 생성
       props.midiFile.tracks.forEach((track, idx) => {
         let inst = instrumentMap[track.instrument.number];
 
+        // 없는 악기 및 드럼 예외 처리
         if (!inst) {
           inst = "acoustic_grand_piano"; // TODO : 없는 악기 piano로 임시 대체했는데, 모든 미디 악기 분류해서 mapping 해주기
         } else if (track.instrument.percussion === true) {
           inst = "synth_drum" // Drum 일단 대체
         }
+
         Soundfont.instrument(audioContext, inst).then(function (play) {
           setInstrumentObject((prev) => {
             return { ...prev, [idx]: play };
@@ -78,6 +85,7 @@ const MultiTrackView = (props) => {
       })
     }
   }, [props.midiFile]);
+
 
   // 총 duration 시간 넘어가면 자동으로 재생 멈추게 하기
   useEffect(() => {
@@ -216,8 +224,7 @@ const MultiTrackView = (props) => {
   }
 
 
-  // ==== Event Handlers ======
-
+  // Event Handlers
   const handleClickPlay = () => {
     setPlaying((prev) => !prev);
     playMidi();

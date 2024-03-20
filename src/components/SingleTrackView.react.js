@@ -8,15 +8,18 @@ const SingleTrackView = (props) => {
 
     const trackAreaStyle = {
         backgroundColor: props.color,
-        // height: '7vh',
         height: '7vh',
         borderRadius: '10px',
         marginBottom: '7px',
         alignItems: "flex-end"
     }
     const handleClickRegenerate = () => {
+        if (props.track.instrument.percussion === true) {
+            props.setRegenInstNum(-1);
+        } else {
+            props.setRegenInstNum(props.track.instrument.number);
+        }
         props.setRegenTrackIdx(props.idx);
-        props.setRegenInstNum(props.track.instrument.number);
         props.setRegenTrigger((prev) => prev + 1);
     }
 
@@ -31,15 +34,6 @@ const SingleTrackView = (props) => {
                 </div>
             </Col>
             <Col xs={1} className="d-flex align-items-center">
-                <Button
-                    className="float-end"
-                    disabled={props.playing}
-                    variant="outline-danger"
-                    onClick={() => props.handleClickRemove(props.idx)}
-                    size="sm"
-                >
-                    X
-                </Button>
                 <Button
                     className="float-end"
                     variant="outline-primary"
@@ -58,13 +52,20 @@ const SingleTrackView = (props) => {
                 >
                     M
                 </Button>
+                <Button
+                    className="float-end"
+                    disabled={props.playing}
+                    variant="outline-danger"
+                    onClick={() => props.handleClickRemove(props.idx)}
+                    size="sm"
+                >
+                    X
+                </Button>
             </Col>
             <Col xs={9}>
-                {/* Notes : {JSON.stringify(track.notes)} */}
                 <Row
                     // className="p-2 d-flex align-items-center"
                     className="p-1 d-flex"
-                    // className="p-0 d-flex"
                     style={trackAreaStyle}>
                     <div style={{ height: "100%", position: "relative", display: "flex", alignItems: "flex-end" }}>
                         {props.track.notes.map((note, idx) => (

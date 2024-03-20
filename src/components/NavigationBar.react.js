@@ -3,7 +3,7 @@ import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 import NavDropdown from 'react-bootstrap/NavDropdown';
 
-function BasicExample() {
+function NavBar() {
     return (
         <Navbar style={{ backgroundColor: "#A181FD" }} data-bs-theme="dark">
             <Container className="p-1 ms-4">
@@ -40,4 +40,4 @@ function BasicExample() {
     );
 }
 
-export default BasicExample;
+export default NavBar;

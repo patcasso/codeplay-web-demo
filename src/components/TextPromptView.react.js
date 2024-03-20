@@ -8,8 +8,6 @@ import Col from 'react-bootstrap/Col';
 import InputGroup from 'react-bootstrap/InputGroup';
 import Button from 'react-bootstrap/Button';
 
-import { Midi } from '@tonejs/midi'
-
 // Server에서 받은 파일 ArrayBuffer로 저장
 const readFileAsArrayBuffer = (file) => {
   return new Promise((resolve, reject) => {
@@ -22,7 +20,6 @@ const readFileAsArrayBuffer = (file) => {
     reader.onerror = (error) => {
       reject(error);
     };
-
     reader.readAsArrayBuffer(file);
   });
 };
@@ -33,47 +30,15 @@ const TextPromptView = (props) => {
   const [showTextPrompt, setShowTextPrompt] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const sendGenerateRequest = () => {
-    setIsGenerating(true);
-    fetch(
-      // "http://0.0.0.0:8000/generate/",
-      "https://223.130.162.67:8200/generate_midi/",
-      {
-        method: 'POST',
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          "prompt": prompt,
-        }),
-      }
-    )
-      .then((response) => response.blob())
-      .then((blob) => readFileAsArrayBuffer(blob))
-      .then((arrayBuffer) => {
-        console.log(arrayBuffer)
-        props.setMidiBlob(arrayBuffer)
-        setIsGenerating(false);
-      })
-      .catch((error) => {
-        console.error(error);
-        alert(`Something went wrong. Please try again! \n\n[Error Message]\n${error}`)
-        setIsGenerating(false);
-      });
-
-  };
-
   const sendLambdaRequest = () => {
     setIsGenerating(true);
     fetch(
-      // "http://0.0.0.0:8000/generate/",
       "https://zab3ww1o85.execute-api.ap-northeast-2.amazonaws.com/default/codeplayGenerateFromPrompt",
       {
         method: 'POST',
         headers: {
           "Content-Type": "application/json",
           "Accept": "*/*"
-          // "x-api-key": "srCLnpGgZW4bovH9rgvWs6NVJkGaxKhi1KkIRZOb"
         },
         body: JSON.stringify({
           "prompt": prompt,
@@ -81,8 +46,6 @@ const TextPromptView = (props) => {
       }
     )
       .then((response) => {
-        console.log(response.body);
-        
         const reader = response.body.getReader();
         let receivedData = ''; // Variable to store the received data
 
@@ -91,30 +54,20 @@ const TextPromptView = (props) => {
           return reader.read().then(async ({ done, value }) => {
             if (done) {
               console.log('Response body fully received');
-              console.log('Received data:', receivedData); // Access the received data here
-              // console.log(receivedData.split(","))
-
-              // const blob = new Blob([receivedData])
-              // console.log(`blob: ${blob}`)
+              // console.log('Received data:', receivedData); // Access the received data here
               try {
-                // const arrayBuffer = await readFileAsArrayBuffer(blob);
-                // console.log(`arrayBuffer: ${arrayBuffer}`);
-
-                // props.setMidiBlob(arrayBuffer);
+                console.log(value);
               } catch (error) {
                 console.error('Error reading file as array buffer:', error);
               }
               return;
             }
 
-            // Process the received chunk of data (value) here
-            console.log('Received chunk of data:', value);
-
             // Uint8Array 디코딩
             const string = new TextDecoder().decode(value);
             let modifiedStr = string.substring(1, string.length - 1);
-            console.log(modifiedStr)
 
+            // Blob 생성
             const dataURI = `data:audio/midi;base64,${modifiedStr}`
             const dataURItoBlob = (dataURI) => {
               
@@ -130,19 +83,8 @@ const TextPromptView = (props) => {
               return new Blob([ab], {type: mimeString});
             };
 
-            console.log(dataURItoBlob(dataURI));
             const arrayBuffer = await readFileAsArrayBuffer(dataURItoBlob(dataURI));
-            console.log(arrayBuffer)
             props.setMidiBlob(arrayBuffer);
-            
-  
-
-            // base64 디코딩
-            console.log(atob(modifiedStr))
-            const midi = new Midi(atob(modifiedStr))
-            // console.log(midi)
-
-            // props.setMidiBlob(atob(modifiedStr));
 
             receivedData += value;
 
@@ -155,9 +97,9 @@ const TextPromptView = (props) => {
 
         // Start reading the response body
         readResponseBody(reader);
-        // response.json()
+
+        // Set Generating to false when done generating
         setIsGenerating(false)
-        
       })
       .catch((error) => {
         console.error(error);
@@ -170,12 +112,14 @@ const TextPromptView = (props) => {
   const handleClickGenerate = () => {
     if (props.midiBlob) {
       if (window.confirm(`Delete current tracks and generate new tracks?`)) {
-        sendGenerateRequest();
+        // sendGenerateRequest();
+        sendLambdaRequest();
       } else {
         return;
       }
     } else {
-      sendGenerateRequest();
+      // sendGenerateRequest();
+      sendLambdaRequest();
     }
   }
 
@@ -225,21 +169,11 @@ const TextPromptView = (props) => {
             </InputGroup>
             <Button
               className="mt-3 float-end"
-              variant="secondary"
+              variant="primary"
               onClick={handleClickGenerate}
-              // disabled={textInput === ""}
               disabled={isGenerating}
             >
               {isGenerating ? "Generating 🕐" : "Generate 🪄"}
-            </Button>
-            <Button
-              className="mt-3 me-2 float-end"
-              variant="danger"
-              onClick={sendLambdaRequest}
-              // disabled={textInput === ""}
-              disabled={isGenerating}
-            >
-              Lambda Request
             </Button>
           </Card.Body>
           : null}
