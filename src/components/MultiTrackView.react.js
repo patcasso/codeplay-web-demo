@@ -6,6 +6,8 @@ import SingleTrackView from './SingleTrackView.react.js'
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Button from "react-bootstrap/Button";
+import Card from "react-bootstrap/Card";
+import Container from "react-bootstrap/Container";
 
 import Soundfont from "soundfont-player";
 import * as Tone from "tone";
@@ -305,7 +307,7 @@ const MultiTrackView = (props) => {
     } else {
       widthPercent = `${durationPercent}%`;
     }
-    
+
     return {
       position: "absolute",
       float: "left",
@@ -430,7 +432,20 @@ const MultiTrackView = (props) => {
             />
           ) : null
         )
-        : null}
+        :
+        <Container>
+          <Card className="mt-3" style={{ border: "none" }}>
+            <Card.Body
+              className="text-center"
+              style={{ color: "#7d7d7d", fontSize: "20px" }}
+            >
+              <img src="./inst_icons/conductor.png" width="80px" style={{ opacity: 0.4 }} />
+              Start Creating Some Music By Entering Text Prompt!
+              {/* There is no Music yet! */}
+            </Card.Body>
+          </Card>
+        </Container>
+      }
     </>
   );
 };

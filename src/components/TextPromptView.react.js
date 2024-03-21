@@ -8,6 +8,9 @@ import Col from 'react-bootstrap/Col';
 import InputGroup from 'react-bootstrap/InputGroup';
 import Button from 'react-bootstrap/Button';
 
+import { examplePrompts } from "../utils/examplePrompts.js";
+import '../index.css'
+
 // Server에서 받은 파일 ArrayBuffer로 저장
 const readFileAsArrayBuffer = (file) => {
   return new Promise((resolve, reject) => {
@@ -24,11 +27,64 @@ const readFileAsArrayBuffer = (file) => {
   });
 };
 
+// Example Prompts 중 n개 뽑아오는 함수
+const returnRandomPrompts = (n) => {
+  const promptsArray = Object.entries(examplePrompts);
+  const result = [];
+  const len = promptsArray.length;
+
+  if (n >= len) {
+    return promptsArray;
+  }
+
+  const indices = new Set();
+
+  while (indices.size < n) {
+    indices.add(Math.floor(Math.random() * len));
+  }
+
+  for (let index of indices) {
+    result.push(promptsArray[index]);
+  }
+
+  return result;
+}
+const examplePromptsObj = returnRandomPrompts(3);
+
 
 const TextPromptView = (props) => {
   const [prompt, setPrompt] = useState("");
   const [showTextPrompt, setShowTextPrompt] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
+
+  
+  const CustomButton = ({ prompt }) => {
+    const [isHovered, setIsHovered] = useState(false);
+    
+    const handleClickExample = () => {
+      setPrompt(prompt);
+      handleClickGenerate();
+    }
+
+    const buttonStyle = {
+      backgroundColor: isHovered ? '#f0f0f0' : 'white',
+      borderColor: "#dbdbdb",
+      color: "#7a7a7a",
+      cursor: 'pointer',
+      // width: '23rem'
+    };
+  
+    return (
+      <Button
+        style={buttonStyle}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        onClick={handleClickExample}
+      >
+        {prompt}
+      </Button>
+    );
+  }
 
   const sendLambdaRequest = () => {
     setIsGenerating(true);
@@ -67,7 +123,7 @@ const TextPromptView = (props) => {
             const string = new TextDecoder().decode(value);
             const responseJson = JSON.parse(string);
             const conditions = responseJson.condition;
-            const [ emotion, tempo, genre ] = [conditions[0], conditions[1], conditions[2]]
+            const [emotion, tempo, genre] = [conditions[0], conditions[1], conditions[2]]
             props.setGenerateConditions((prev) => {
               return { ...prev, ['emotion']: emotion, ['tempo']: tempo, ['genre']: genre };
             });
@@ -155,33 +211,50 @@ const TextPromptView = (props) => {
         </Card.Header>
         {showTextPrompt ?
           <Card.Body>
-            <InputGroup>
-              <Form.Control
-                id="prompt-input-field"
-                type="text"
-                placeholder="Enter prompt"
-                value={prompt}
-                onChange={(event) => {
-                  setPrompt(event.target.value);
-                }}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    handleClickGenerate()
-                  } else if (event.key === "Escape") {
-                    setPrompt("")
-                  }
-                }}
-                autoFocus="autofocus"
-              />
-            </InputGroup>
-            <Button
-              className="mt-3 float-end"
-              variant="primary"
-              onClick={handleClickGenerate}
-              disabled={isGenerating}
-            >
-              {isGenerating ? "Generating..." : "Generate"}
-            </Button>
+            <Row>
+              <InputGroup>
+                <Form.Control
+                  id="prompt-input-field"
+                  type="text"
+                  placeholder="Enter your prompt"
+                  value={prompt}
+                  onChange={(event) => {
+                    setPrompt(event.target.value);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      handleClickGenerate()
+                    } else if (event.key === "Escape") {
+                      setPrompt("")
+                    }
+                  }}
+                  autoFocus="autofocus"
+                />
+              </InputGroup>
+            </Row>
+            <Row className="mt-4">
+              <Col xs={10}>
+                <Row>
+                  {examplePromptsObj.map((example) => {
+                    return (
+                      <Col key={example[0]} md={4}>
+                        <CustomButton prompt={example[1]} />
+                      </Col>
+                    )
+                  })}
+                </Row>
+              </Col>
+              <Col xs={2}>
+                <Button
+                  className="mt-3 float-end"
+                  variant="primary"
+                  onClick={handleClickGenerate}
+                  disabled={isGenerating}
+                >
+                  {isGenerating ? "Generating..." : "Generate"}
+                </Button>
+              </Col>
+            </Row>
           </Card.Body>
           : null}
       </Card>
