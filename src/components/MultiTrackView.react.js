@@ -273,41 +273,52 @@ const MultiTrackView = (props) => {
   };
 
   const handleNoteStyle = (idx, time, duration, nextStartTime, pitch) => {
-    // console.log(pitch)
-    let marginLeft;
     const currentTimeSec = currentTime / 1000;
-    const widthPercent = (((nextStartTime - time) * 1000) / totalMs) * 100;
+    const durationPercent = ((duration * 1000) / totalMs) * 100;
+    const leftPercent = (time * 1000) / totalMs * 100;
+    const totalNotesNum = Object.keys(notePositions).length;
 
+    let marginLeft;
+    let borderStyle;
+    let divColor;
+    let widthPercent;
+
+    // 첫 note인데 바로 시작하지 않는 경우 예외 처리
     if (idx == 0 && time != 0) {
       marginLeft = ((time * 1000) / totalMs) * 100;
     } else {
       marginLeft = 0;
     }
 
-    if (time < currentTimeSec && currentTimeSec <= nextStartTime) {
-      return {
-        position: "relative",
-        color: "#eb4b5d",
-        padding: "0px",
-        height:"15%",
-        bottom: `${notePositions[pitch]}%`,
-        marginLeft: `${marginLeft}%`,
-        width: `${widthPercent}%`,
-        float: "left",
-      };
+    // 현재 재생중인 note 스타일 처리
+    if (time <= currentTimeSec && currentTimeSec <= nextStartTime) {
+      divColor = "#ffbaba";
+      borderStyle = `1px solid #eb4b5d`;
     } else {
-      return {
-        position: "relative",
-        color: "white",
-        padding: "0px",
-        height:"15%",
-        bottom: `${notePositions[pitch]}%`,
-        marginLeft: `${marginLeft}%`,
-        width: `${widthPercent}%`,
-        float: "left",
-      };
+      divColor = "white";
+      borderStyle = `1px solid #bdbbbb`;
     }
-  };
+
+    // 마지막 음 duration이 경계 넘어가는 경우 예외 처리
+    if (leftPercent + durationPercent > 100) {
+      widthPercent = `${leftPercent + durationPercent - 100}%`;
+    } else {
+      widthPercent = `${durationPercent}%`;
+    }
+    
+    return {
+      position: "absolute",
+      float: "left",
+      padding: "0px",
+      height: "14%",
+      // height: `${100 / totalNotesNum}%`,
+      border: borderStyle,
+      backgroundColor: divColor,
+      width: widthPercent,
+      left: `${leftPercent}%`,
+      bottom: `${notePositions[pitch]}%`,
+    };
+  }
 
   const handleProgressBar = () => {
     return { color: "white", marginLeft: `${(currentTime / totalMs) * 100}%` };
@@ -357,7 +368,6 @@ const MultiTrackView = (props) => {
             variant="dark"
             onClick={handleClickStopInstrument}>
             ■
-            {/* STOP */}
           </Button>
           <Button
             className="ms-2"
@@ -396,31 +406,31 @@ const MultiTrackView = (props) => {
         <Col xs={1}>
         </Col>
       </Row>
-        {midiFile
-          ? midiFile.tracks.map((track, idx) =>
-            track.notes.length > 0 ? ( // note가 있는 트랙만 표시
-              <SingleTrackView
-                key={idx}
-                idx={idx}
-                color={assignTrackColor(idx)}
-                track={track}
-                playing={playing}
-                totalMs={totalMs}
-                soloTrack={soloTrack}
-                mutedTracks={mutedTracks}
-                handleClickRemove={handleClickRemove}
-                handleSoloButton={handleSoloButton}
-                handleMuteButton={handleMuteButton}
-                handleNoteStyle={handleNoteStyle}
-                setRegenTrackIdx={props.setRegenTrackIdx}
-                setRegenInstNum={props.setRegenInstNum}
-                setRegenTrigger={props.setRegenTrigger}
-                isGenerating={props.isGenerating}
-                instrumentTrack={instrumentObject[idx]}
-              />
-            ) : null
-          )
-          : null}
+      {midiFile
+        ? midiFile.tracks.map((track, idx) =>
+          track.notes.length > 0 ? ( // note가 있는 트랙만 표시
+            <SingleTrackView
+              key={idx}
+              idx={idx}
+              color={assignTrackColor(idx)}
+              track={track}
+              playing={playing}
+              totalMs={totalMs}
+              soloTrack={soloTrack}
+              mutedTracks={mutedTracks}
+              handleClickRemove={handleClickRemove}
+              handleSoloButton={handleSoloButton}
+              handleMuteButton={handleMuteButton}
+              handleNoteStyle={handleNoteStyle}
+              setRegenTrackIdx={props.setRegenTrackIdx}
+              setRegenInstNum={props.setRegenInstNum}
+              setRegenTrigger={props.setRegenTrigger}
+              isGenerating={props.isGenerating}
+              instrumentTrack={instrumentObject[idx]}
+            />
+          ) : null
+        )
+        : null}
     </>
   );
 };
