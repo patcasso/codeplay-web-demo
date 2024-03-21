@@ -17,7 +17,6 @@ const SingleTrackView = (props) => {
         })
         const startTimeArray = Array.from(startTimeSet);
         setStartTimes(startTimeArray);
-        console.log(startTimes);
     }, [props.track])
 
     const trackAreaStyle = {

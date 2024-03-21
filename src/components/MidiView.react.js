@@ -5,13 +5,13 @@ import Card from 'react-bootstrap/Card';
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col';
 import Button from "react-bootstrap/Button";
-import Form from 'react-bootstrap/Form';
-import InputGroup from 'react-bootstrap/InputGroup';
 
 import MultiTrackView from './MultiTrackView.react.js'
-import SampleMidiDropdown from "./SampleMidiDropdown.js";
+import SampleMidiDropdown from "../utils/SampleMidiDropdown.js";
+import InstListDropdown from "../utils/InstListDropdown.js";
 
 import { Midi } from '@tonejs/midi'
+import { ButtonGroup } from "react-bootstrap";
 
 
 // Drag & Drop event handler
@@ -46,7 +46,7 @@ const MidiView = (props) => {
     const [sampleTitle, setSampleTitle] = useState("Sample MIDI");
     const [regenTrackIdx, setRegenTrackIdx] = useState(null);
     const [regenInstNum, setRegenInstNum] = useState();
-    const [addInstNum, setAddInstNum] = useState();
+    const [addInstNum, setAddInstNum] = useState(999);
     const [isGenerating, setIsGenerating] = useState(false);
     const [regenTrigger, setRegenTrigger] = useState(0);
 
@@ -298,28 +298,21 @@ const MidiView = (props) => {
                     />
                     {midiFile ?
                         <Row className="mt-3">
-                            <Col xs={10}></Col>
-                            <Col xs={2}>
-                                <InputGroup>
-                                    <Form.Control
-                                        type="number"
-                                        placeholder="Inst No."
-                                        min="-1"
-                                        max="127"
-                                        onChange={(event) => {
-                                            setAddInstNum(event.target.valueAsNumber);
-                                        }}
+                            <Col xs={8} />
+                            <Col xs={4}>
+                                <ButtonGroup className="float-end me-4">
+                                    <InstListDropdown
+                                        addInstNum={addInstNum}
+                                        setAddInstNum={setAddInstNum}
                                     />
                                     <Button
-                                        className="float-"
                                         variant="outline-primary"
                                         onClick={handleClickAddInst}
                                         disabled={isGenerating}
                                     >
                                         {isGenerating ? "Adding..." : "Add Inst"}
                                     </Button>
-                                </InputGroup>
-
+                                </ButtonGroup>
                             </Col>
                         </Row> : null
                     }
