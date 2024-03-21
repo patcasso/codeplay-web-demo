@@ -41,8 +41,8 @@ const readFileAsArrayBuffer = (file) => {
 // Main component
 const MidiView = (props) => {
     const [midiFile, setMidiFile] = useState();
-    const [midiFileRaw, setMidiFileRaw] = useState();
-    const [fileName, setFileName] = useState("Drag and drop MIDI file here (4 Bars only!)")
+    // const [midiFileRaw, setMidiFileRaw] = useState();
+    // const [fileName, setFileName] = useState("Drag and drop MIDI file here (4 Bars only!)")
     const [sampleTitle, setSampleTitle] = useState("Sample MIDI");
     const [regenTrackIdx, setRegenTrackIdx] = useState(null);
     const [regenInstNum, setRegenInstNum] = useState();
@@ -69,32 +69,32 @@ const MidiView = (props) => {
     }, [regenTrigger])
 
     // 드래그 앤 드롭으로 올린 미디 파일을 멀티트랙 뷰로 보내고 서버에 전송 가능한 형태로 준비시킴
-    const handleFileDrop = async (event) => {
-        event.preventDefault();
+    // const handleFileDrop = async (event) => {
+    //     event.preventDefault();
 
-        const file = event.dataTransfer.files[0];
+    //     const file = event.dataTransfer.files[0];
 
-        if (file) {
-            try {
-                setMidiFileRaw(file);
+    //     if (file) {
+    //         try {
+    //             setMidiFileRaw(file);
 
-                const arrayBuffer = await readFileAsArrayBuffer(file);
-                const midi = new Midi(arrayBuffer)
+    //             const arrayBuffer = await readFileAsArrayBuffer(file);
+    //             const midi = new Midi(arrayBuffer)
 
-                setMidiFile(midi);
-                setFileName(file.name);
-            } catch (error) {
-                console.error('Error parsing MIDI file:', error);
-            }
-        }
-    };
+    //             setMidiFile(midi);
+    //             setFileName(file.name);
+    //         } catch (error) {
+    //             console.error('Error parsing MIDI file:', error);
+    //         }
+    //     }
+    // };
 
     // 특정 악기를 Regenerate 하도록 하면, 해당 악기 번호와 해당 악기만 제외한 미디 파일을 서버로 전달
     const regenerateSingleInstrument = () => {
         if (midiFile) {
             try {
                 // Index에 해당하는 악기만 빼서 다시 정의
-                const newMidi = midiFile.clone()
+                const newMidi = midiFile.clone();
                 newMidi.tracks.splice(regenTrackIdx, 1);
                 sendMidiToServerLambda(newMidi, regenInstNum);
             } catch (error) {
@@ -251,12 +251,12 @@ const MidiView = (props) => {
                     Generated Music
                 </Card.Header>
                 <Card.Body>
-                    <div
+                    {/* <div
                         onDrop={handleFileDrop}
                         onDragOver={handleDragOver}
                         style={{
                             width: '100%',
-                            height: '10vh',
+                            height: '6vh',
                             display: 'flex',
                             justifyContent: 'center',
                             alignItems: 'center',
@@ -264,30 +264,12 @@ const MidiView = (props) => {
                         }}
                     >
                         <p>{fileName}</p>
-                    </div>
-                    <Row className="mt-2">
+                    </div> */}
+                    {/* <Row className="mt-2">
                         <Col>
-                            <SampleMidiDropdown
-                                sampleTitle={sampleTitle}
-                                handleLoadSampleMidi={handleLoadSampleMidi}
-                                setSampleTitle={setSampleTitle}
-                            />
-                            <Button
-                                className="float-start"
-                                variant="outline-dark"
-                                onClick={handleDownloadMidi}
-                            >
-                                Download Current MIDI
-                            </Button>
-                            {/* <Button
-                                className="float-start ms-2"
-                                variant="danger"
-                                onClick={() => { props.setShowErrorModal(true) }}
-                            >
-                                Error!
-                            </Button> */}
+
                         </Col>
-                    </Row>
+                    </Row> */}
                     <MultiTrackView
                         midiFile={midiFile}
                         isGenerating={isGenerating}
@@ -298,7 +280,27 @@ const MidiView = (props) => {
                     />
                     {midiFile ?
                         <Row className="mt-3">
-                            <Col xs={8} />
+                            <Col xs={8}>
+                                <Button
+                                    className="float-start"
+                                    variant="outline-dark"
+                                    onClick={handleDownloadMidi}
+                                >
+                                    Download Current MIDI
+                                </Button>
+                                <SampleMidiDropdown
+                                    sampleTitle={sampleTitle}
+                                    handleLoadSampleMidi={handleLoadSampleMidi}
+                                    setSampleTitle={setSampleTitle}
+                                />
+                                {/* <Button
+                                    className="float-start ms-2"
+                                    variant="danger"
+                                    onClick={() => { props.setShowErrorModal(true) }}
+                                >
+                                    Error!
+                                </Button> */}
+                            </Col>
                             <Col xs={4}>
                                 <ButtonGroup className="float-end me-4">
                                     <InstListDropdown

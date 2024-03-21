@@ -10,7 +10,7 @@ const SampleMidiDropdown = (props) => {
     return (
         <DropdownButton
             as={ButtonGroup}
-            className="float-end"
+            className="float-start ms-2"
             title={props.sampleTitle}
             variant="outline-dark"
         >
