@@ -24,6 +24,20 @@ export const getIconName = (instNum) => {
             return "brass"; 
         case (instNum >= 64 && instNum <= 71):
             return "reed"; 
+        case (instNum >= 72 && instNum <= 79):
+            return "pipe"; 
+        case (instNum >= 80 && instNum <= 87): // Synth Lead
+            return "synth"; 
+        case (instNum >= 88 && instNum <= 95): // Synth Pad
+            return "synth"; 
+        case (instNum >= 96 && instNum <= 103): // Synth Effects
+            return "mixer"; 
+        case (instNum >= 104 && instNum <= 111): // World
+            return "sitar"; 
+        case (instNum >= 112 && instNum <= 119): // Percussions
+            return "congas"; 
+        case (instNum >= 120 && instNum <= 127): // Percussions
+            return "soundeffect"; 
         default:
             return "piano";
     }

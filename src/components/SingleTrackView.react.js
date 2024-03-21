@@ -1,4 +1,5 @@
 import React from "react";
+import { useState, useEffect } from "react"
 
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
@@ -7,6 +8,17 @@ import Button from "react-bootstrap/Button";
 import { getIconName } from "../utils/IconMapping";
 
 const SingleTrackView = (props) => {
+    const [startTimes, setStartTimes] = useState([]);
+
+    useEffect(() => {
+        let startTimeSet = new Set();
+        props.track.notes.forEach((note) => {
+            startTimeSet.add(note.time);
+        })
+        const startTimeArray = Array.from(startTimeSet);
+        setStartTimes(startTimeArray);
+        console.log(startTimes);
+    }, [props.track])
 
     const trackAreaStyle = {
         backgroundColor: props.color,
@@ -30,19 +42,14 @@ const SingleTrackView = (props) => {
     } else {
         instNum = props.track.instrument.number;
     }
-    
-    // console.log(instNum);
-    // console.log(getIconName(instNum));
-
 
     return (
         <Row key={props.idx}>
-            {/* <Col xs={1} className="d-flex align-items-center"> */}
             <Col xs={1} className="d-flex align-items-center">
                 <div className="me-2">
                     <img src={`./inst_icons/${getIconName(instNum)}.png`} width="25px" />
                 </div>
-                <div>
+                <div style={{maxHeight:"7vh", overflowY:"hidden"}}>
                     {props.track.name}
                 </div>
             </Col>
@@ -77,10 +84,14 @@ const SingleTrackView = (props) => {
             </Col>
             <Col xs={9}>
                 <Row
-                    // className="p-2 d-flex align-items-center"
-                    className="p-1 d-flex"
+                    className="p-2 d-flex"
                     style={trackAreaStyle}>
-                    <div style={{ height: "100%", position: "relative", display: "flex", alignItems: "flex-end" }}>
+                    <div style={{
+                        height: "100%",
+                        position: "relative",
+                        display: "flex",
+                        alignItems: "flex-end"
+                    }}>
                         {props.track.notes.map((note, idx) => (
                             <div
                                 key={idx}
@@ -88,16 +99,11 @@ const SingleTrackView = (props) => {
                                     idx,
                                     note.time,
                                     note.duration,
-                                    idx < props.track.notes.length - 1
-                                        ? props.track.notes[idx + 1].time
-                                        : props.totalMs / 1000,
+                                    note.time == startTimes[startTimes.length - 1]
+                                        ? props.totalMs / 1000
+                                        : startTimes[startTimes.indexOf(note.time) + 1],
                                     note.pitch
                                 )}>
-                                ♥
-                                {/* ● */}
-                                {/* {note.pitch} */}
-                                {/* {note.time} */}
-                                {/* {note.duration} */}
                             </div>
                         ))}
                     </div>
