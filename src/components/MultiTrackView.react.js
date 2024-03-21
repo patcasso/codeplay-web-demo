@@ -291,7 +291,7 @@ const MultiTrackView = (props) => {
     }
 
     // 현재 재생중인 note 스타일 처리
-    if (time <= currentTimeSec && currentTimeSec <= nextStartTime) {
+    if (time < currentTimeSec && currentTimeSec <= nextStartTime) {
       divColor = "#ffbaba";
       borderStyle = `1px solid #eb4b5d`;
     } else {
