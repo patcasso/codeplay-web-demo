@@ -4,6 +4,8 @@ import { Dropdown } from "react-bootstrap";
 import { ButtonGroup } from "react-bootstrap";
 import { instrumentMap } from "./InstrumentList";
 
+import { getIconName } from "./IconMapping";
+
 
 const InstListDropdown = (props) => {
 
@@ -28,7 +30,10 @@ const InstListDropdown = (props) => {
                 variant="outline-dark"
                 id="dropdown-basic"
             >
-                {instNumToName()}
+                <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                    <img src={`./inst_icons/${getIconName(props.addInstNum)}.png`} width="16px" style={{ marginRight: "5px" }} />
+                    {instNumToName()}
+                </span>
             </Dropdown.Toggle>
             <Dropdown.Menu
                 style={{
@@ -41,7 +46,10 @@ const InstListDropdown = (props) => {
                         props.setAddInstNum(999);
                     }}
                 >
-                    <span>Random</span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                        <img src={`./inst_icons/${getIconName(999)}.png`} width="20px" style={{ marginRight: "5px" }} />
+                        Random
+                    </span>
                 </Dropdown.Item>
                 <Dropdown.Item
                     as="button"
@@ -49,7 +57,10 @@ const InstListDropdown = (props) => {
                         props.setAddInstNum(-1);
                     }}
                 >
-                    <span>Drums</span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                        <img src={`./inst_icons/${getIconName(-1)}.png`} width="20px" style={{ marginRight: "5px" }} />
+                        Drums
+                    </span>
                 </Dropdown.Item>
                 {Object.entries(instrumentMap).map(([key, value]) => (
                     <Dropdown.Item
@@ -59,7 +70,10 @@ const InstListDropdown = (props) => {
                             props.setAddInstNum(parseInt(key));
                         }}
                     >
-                        <span>{value}</span>
+                        <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                            <img src={`./inst_icons/${getIconName(parseInt(key))}.png`} width="20px" style={{ marginRight: "5px" }} />
+                            {value}
+                        </span>
                     </Dropdown.Item>
                 ))}
             </Dropdown.Menu>

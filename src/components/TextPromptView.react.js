@@ -7,9 +7,12 @@ import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import InputGroup from 'react-bootstrap/InputGroup';
 import Button from 'react-bootstrap/Button';
+import Spinner from 'react-bootstrap/Spinner';
 
 import { examplePrompts } from "../utils/examplePrompts.js";
 import '../index.css'
+
+const MAX_PROMPT_LEN = 200;
 
 // Server에서 받은 파일 ArrayBuffer로 저장
 const readFileAsArrayBuffer = (file) => {
@@ -49,18 +52,19 @@ const returnRandomPrompts = (n) => {
 
   return result;
 }
-const examplePromptsObj = returnRandomPrompts(3);
+// const examplePromptsObj = returnRandomPrompts(3);
 
 
 const TextPromptView = (props) => {
   const [prompt, setPrompt] = useState("");
   const [showTextPrompt, setShowTextPrompt] = useState(true);
-  const [isGenerating, setIsGenerating] = useState(false);
+  // const [isGenerating, setIsGenerating] = useState(false);
+  const [examplePromptsObj, setExamplePromptsObj] = useState(returnRandomPrompts(3));
 
-  
-  const CustomButton = ({ prompt }) => {
+
+  const PromptCards = ({ prompt }) => {
     const [isHovered, setIsHovered] = useState(false);
-    
+
     const handleClickExample = () => {
       setPrompt(prompt);
       handleClickGenerate();
@@ -73,9 +77,10 @@ const TextPromptView = (props) => {
       cursor: 'pointer',
       // width: '23rem'
     };
-  
+
     return (
       <Button
+        disabled={props.isGenerating}
         style={buttonStyle}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
@@ -86,8 +91,34 @@ const TextPromptView = (props) => {
     );
   }
 
+  const PromptRefresh = () => {
+    const [isHovered, setIsHovered] = useState(false);
+
+    const buttonStyle = {
+      backgroundColor: isHovered ? '#f0f0f0' : 'white',
+      borderColor: "#dbdbdb",
+      color: "#7a7a7a",
+      cursor: 'pointer',
+    };
+
+    return (
+      <Button
+        size="sm"
+        disabled={props.isGenerating}
+        style={buttonStyle}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        onClick={() => { setExamplePromptsObj(returnRandomPrompts(3)) }}
+      >
+        ↺
+      </Button>
+    );
+  }
+
+
+
   const sendLambdaRequest = () => {
-    setIsGenerating(true);
+    props.setIsGenerating(true);
     fetch(
       "https://zab3ww1o85.execute-api.ap-northeast-2.amazonaws.com/default/codeplayGenerateFromPrompt",
       {
@@ -161,13 +192,13 @@ const TextPromptView = (props) => {
         readResponseBody(reader);
 
         // Set Generating to false when done generating
-        setIsGenerating(false)
+        props.setIsGenerating(false)
       })
       .catch((error) => {
         console.error(error);
         props.setShowErrorModal(true);
         props.setErrorLog(error.message);
-        setIsGenerating(false);
+        props.setIsGenerating(false);
       });
 
   };
@@ -216,10 +247,16 @@ const TextPromptView = (props) => {
                 <Form.Control
                   id="prompt-input-field"
                   type="text"
-                  placeholder="Enter your prompt"
+                  placeholder="Enter your prompt..."
                   value={prompt}
                   onChange={(event) => {
-                    setPrompt(event.target.value);
+                    console.log(event.target.value.length);
+                    if (event.target.value.length <= MAX_PROMPT_LEN) {
+                      setPrompt(event.target.value);
+                    } else {
+                      alert(`Prompts can't be longer than ${MAX_PROMPT_LEN} characters!`)
+                    }
+
                   }}
                   onKeyDown={(event) => {
                     if (event.key === "Enter") {
@@ -238,20 +275,37 @@ const TextPromptView = (props) => {
                   {examplePromptsObj.map((example) => {
                     return (
                       <Col key={example[0]} md={4}>
-                        <CustomButton prompt={example[1]} />
+                        <PromptCards prompt={example[1]} />
                       </Col>
                     )
                   })}
                 </Row>
               </Col>
-              <Col xs={2}>
+              <Col xs={1} className="p-0" style={{ display: 'flex', alignItems: 'center' }}>
+                <div style={{ marginRight: 'auto' }}>
+                  <PromptRefresh />
+                </div>
+
+              </Col>
+              <Col xs={1} style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
                 <Button
-                  className="mt-3 float-end"
+                  className="position-relative"
                   variant="primary"
                   onClick={handleClickGenerate}
-                  disabled={isGenerating}
+                  disabled={props.isGenerating}
                 >
-                  {isGenerating ? "Generating..." : "Generate"}
+                  <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                    {props.isGenerating ? "Generating..." : "Generate"}
+                    <Spinner
+                      size="sm"
+                      style={{ marginLeft: '5px', display: props.isGenerating ? 'inline-block' : 'none' }}
+                      variant="light"
+                      animation="border"
+                      role="status"
+                    >
+                      <span className="visually-hidden">Loading...</span>
+                    </Spinner>
+                  </span>
                 </Button>
               </Col>
             </Row>

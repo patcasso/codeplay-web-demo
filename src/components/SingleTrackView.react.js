@@ -7,13 +7,19 @@ import Button from "react-bootstrap/Button";
 
 import { getIconName } from "../utils/IconMapping";
 
+const relativeToAbsoluteTime = (relativeTime, bpm) => {
+    // return relativeTime * 120 / bpm;
+    return relativeTime;
+}
+
 const SingleTrackView = (props) => {
     const [startTimes, setStartTimes] = useState([]);
 
     useEffect(() => {
         let startTimeSet = new Set();
         props.track.notes.forEach((note) => {
-            startTimeSet.add(note.time);
+            // startTimeSet.add(note.time);
+            startTimeSet.add(relativeToAbsoluteTime(note.time, props.bpm));
         })
         const startTimeArray = Array.from(startTimeSet);
         setStartTimes(startTimeArray);
@@ -48,13 +54,14 @@ const SingleTrackView = (props) => {
                 <div className="me-2">
                     <img src={`./inst_icons/${getIconName(instNum)}.png`} width="25px" />
                 </div>
-                <div style={{maxHeight:"7vh", overflowY:"hidden"}}>
+                <div style={{ maxHeight: "7vh", overflowY: "hidden" }}>
                     {props.track.name}
                 </div>
             </Col>
             <Col xs={1} className="d-flex align-items-center">
                 <Button
                     className="float-end"
+                    disabled={props.isGenerating || props.isAdding}
                     variant="outline-primary"
                     onClick={() => props.handleSoloButton(props.idx)}
                     active={props.soloTrack.includes(props.idx)}
@@ -64,6 +71,7 @@ const SingleTrackView = (props) => {
                 </Button>
                 <Button
                     className="float-end"
+                    disabled={props.isGenerating || props.isAdding}
                     variant="outline-secondary"
                     onClick={() => props.handleMuteButton(props.idx)}
                     active={props.mutedTracks.includes(props.idx)}
@@ -73,7 +81,7 @@ const SingleTrackView = (props) => {
                 </Button>
                 <Button
                     className="float-end"
-                    disabled={props.playing}
+                    disabled={props.playing || props.isGenerating}
                     variant="outline-danger"
                     onClick={() => props.handleClickRemove(props.idx)}
                     size="sm"
@@ -96,11 +104,11 @@ const SingleTrackView = (props) => {
                                 key={idx}
                                 style={props.handleNoteStyle(
                                     idx,
-                                    note.time,
+                                    relativeToAbsoluteTime(note.time, props.bpm),
                                     note.duration,
-                                    note.time == startTimes[startTimes.length - 1]
+                                    relativeToAbsoluteTime(note.time, props.bpm) == startTimes[startTimes.length - 1]
                                         ? props.totalMs / 1000
-                                        : startTimes[startTimes.indexOf(note.time) + 1],
+                                        : startTimes[startTimes.indexOf(relativeToAbsoluteTime(note.time, props.bpm)) + 1],
                                     note.pitch
                                 )}>
                             </div>
@@ -113,7 +121,7 @@ const SingleTrackView = (props) => {
                     size="sm"
                     variant="outline-primary"
                     onClick={handleClickRegenerate}
-                    disabled={props.isGenerating || props.playing}
+                    disabled={props.isGenerating || props.isAdding || props.playing}
                 >
                     ↺
                 </Button>

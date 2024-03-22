@@ -33,12 +33,14 @@ const MultiTrackView = (props) => {
   const [midiFile, setMidiFile] = useState();
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
+  const [bpm, setBpm] = useState(120);
   const [msPerBeat, setMsPerBeat] = useState(0);
   const [totalMs, setTotalMs] = useState(0);
   const [synths, setSynths] = useState([]);
   const [soloTrack, setSoloTrack] = useState([]);
   const [mutedTracks, setMutedTracks] = useState([]);
   const [instrumentObject, setInstrumentObject] = useState({});
+
 
   // currentTime 업데이트
   useEffect(() => {
@@ -59,14 +61,16 @@ const MultiTrackView = (props) => {
       // 시간 정보 추출 및 계산
       const msPerBeatValue = (60 * 1000) / props.midiFile.header.tempos[0].bpm;
       const totalMsCalculated = msPerBeatValue * BEATS_PER_BAR * NUM_BARS;
+      const receivedBpm = props.midiFile.header.tempos[0].bpm;
 
       // MIDI File 및 시간 정보 적용
       setMidiFile(props.midiFile);
       setCurrentTime(0);
       setMsPerBeat(msPerBeatValue);
       setTotalMs(totalMsCalculated);
+      setBpm(receivedBpm);
 
-      console.log(props.midiFile)
+      console.log(props.midiFile);
 
       // instrumentObject 생성
       props.midiFile.tracks.forEach((track, idx) => {
@@ -136,7 +140,7 @@ const MultiTrackView = (props) => {
   // Play Midi in soundfont instruments
   const playInstrument = () => {
     const acTime = audioContext.currentTime;
-
+    console.log(`bpm: ${bpm}`)
     midiFile &&
       midiFile.tracks.forEach((track, idx) => {
         let inst = instrumentMap[track.instrument.number];
@@ -148,6 +152,7 @@ const MultiTrackView = (props) => {
           note.time * 1000 >= currentTime &&
             notes_arr.push({
               time: note.time - currentTime / 1000,
+              // time: (note.time * 120 / bpm) - currentTime / 1000,
               note: note.name,
               duration: note.duration,
             });
@@ -190,7 +195,7 @@ const MultiTrackView = (props) => {
           envelope: {
             attack: 0.02,
             decay: 0.1,
-            sustain: 0.3,
+            sustain: 0.2,
             release: 0.4,
           },
         }).toDestination();
@@ -359,49 +364,69 @@ const MultiTrackView = (props) => {
   return (
     <>
       <Row>
-        <Col className="mt-3">
+        <Col className="mt-0">
           <Button
             variant="dark"
-            onClick={handleClickPlayInstrument}>
+            onClick={handleClickPlayInstrument}
+            disabled={props.isGenerating}
+          >
             {playing ? "PAUSE" : "PLAY"}
           </Button>
           <Button
             className="ms-2"
             variant="dark"
-            onClick={handleClickStopInstrument}>
+            onClick={handleClickStopInstrument}
+            disabled={props.isGenerating}
+          >
             ■
           </Button>
           <Button
             className="ms-2"
             variant="dark"
-            onClick={handleClickBeginning}>
+            onClick={handleClickBeginning}
+            disabled={props.isGenerating}
+          >
             ◀◀
           </Button>
           <Button
             className="ms-2"
             variant="dark"
-            onClick={handleClickRewind}>
+            onClick={handleClickRewind}
+            disabled={props.isGenerating}
+          >
             ◀
           </Button>
           <Button
             className="ms-2"
             variant="dark"
-            onClick={handleClickForward}>
+            onClick={handleClickForward}
+            disabled={props.isGenerating}
+          >
             ▶
           </Button>
-          <Button className="ms-2" variant="dark" onClick={handleClickEnd}>
+          <Button
+            className="ms-2"
+            variant="dark"
+            onClick={handleClickEnd}
+            disabled={props.isGenerating}
+          >
             ▶▶
           </Button>
           <Button
+            disabled={props.isGenerating}
             className="ms-2 float-middle"
             variant="dark"
-            onClick={handleClickPlay}>
+            onClick={handleClickPlay}
+          >
             {playing ? "PAUSE" : "PLAY 8bit"}
           </Button>
         </Col>
       </Row>
       <Row className="mt-3" style={{ color: "gray" }}>
-        <Col xs={2}>Current Time: {(currentTime / 1000).toFixed(1)} (s)</Col>
+        <Col xs={2}>
+          {/* <div>Total Time: {(totalMs / 1000).toFixed(1)} (s)</div> */}
+          <div>Current Time: {(currentTime / 1000).toFixed(1)} (s)</div>
+        </Col>
         <Col xs={9} style={progressBarStyle} className="mb-2">
           <div style={handleProgressBar()}>▼</div>
         </Col>
@@ -418,6 +443,7 @@ const MultiTrackView = (props) => {
               track={track}
               playing={playing}
               totalMs={totalMs}
+              bpm={bpm}
               soloTrack={soloTrack}
               mutedTracks={mutedTracks}
               handleClickRemove={handleClickRemove}
@@ -428,6 +454,7 @@ const MultiTrackView = (props) => {
               setRegenInstNum={props.setRegenInstNum}
               setRegenTrigger={props.setRegenTrigger}
               isGenerating={props.isGenerating}
+              isAdding={props.isAdding}
               instrumentTrack={instrumentObject[idx]}
             />
           ) : null
@@ -437,10 +464,13 @@ const MultiTrackView = (props) => {
           <Card className="mt-3" style={{ border: "none" }}>
             <Card.Body
               className="text-center"
-              style={{ color: "#7d7d7d", fontSize: "20px" }}
+              style={{
+                // color: "#7d7d7d", 
+                // fontSize: "20px" 
+              }}
             >
-              <img src="./inst_icons/conductor.png" width="80px" style={{ opacity: 0.4 }} />
-              Start Creating Some Music By Entering Text Prompt!
+              <img src="./inst_icons/conductor.png" width="80px" style={{ opacity: 0.8 }} />
+              <h4 className="mt-3" style={{ color: "#3b3b3b" }}>Let's start making some music!</h4>
               {/* There is no Music yet! */}
             </Card.Body>
           </Card>

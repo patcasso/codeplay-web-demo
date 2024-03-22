@@ -38,6 +38,8 @@ export const getIconName = (instNum) => {
             return "congas"; 
         case (instNum >= 120 && instNum <= 127): // Percussions
             return "soundeffect"; 
+        case (instNum === 999): // Random
+            return "random"; 
         default:
             return "piano";
     }
