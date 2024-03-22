@@ -471,7 +471,6 @@ const MultiTrackView = (props) => {
             >
               <img src="./inst_icons/conductor.png" width="80px" style={{ opacity: 0.8 }} />
               <h4 className="mt-3" style={{ color: "#3b3b3b" }}>Let's start making some music!</h4>
-              {/* There is no Music yet! */}
             </Card.Body>
           </Card>
         </Container>

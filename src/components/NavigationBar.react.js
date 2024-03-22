@@ -43,7 +43,7 @@ function NavBar(props) {
                     style={{ textAlign: "right", fontSize: "0.6em" }}
                     className="m-0 p-0"
                 >
-                    {/* <span>comet.livecaps@gmail.com</span> */}
+                    {/* <span>codeplay@codeplay.com</span> */}
                     {/* <br /> */}
                     {/* <span>© 2024 NLP07-CodePlay CO. ALL RIGHTS RESERVED</span> */}
                 </Navbar.Text>
