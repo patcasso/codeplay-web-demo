@@ -52,13 +52,11 @@ const returnRandomPrompts = (n) => {
 
   return result;
 }
-// const examplePromptsObj = returnRandomPrompts(3);
 
 
 const TextPromptView = (props) => {
   const [prompt, setPrompt] = useState("");
   const [showTextPrompt, setShowTextPrompt] = useState(true);
-  // const [isGenerating, setIsGenerating] = useState(false);
   const [examplePromptsObj, setExamplePromptsObj] = useState(returnRandomPrompts(3));
 
 

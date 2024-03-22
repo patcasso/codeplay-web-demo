@@ -42,13 +42,11 @@ const readFileAsArrayBuffer = (file) => {
 // Main component
 const MidiView = (props) => {
     const [midiFile, setMidiFile] = useState();
-    // const [midiFileRaw, setMidiFileRaw] = useState();
     // const [fileName, setFileName] = useState("Drag and drop MIDI file here (4 Bars only!)")
     const [sampleTitle, setSampleTitle] = useState("Sample MIDI");
     const [regenTrackIdx, setRegenTrackIdx] = useState(null);
     const [regenInstNum, setRegenInstNum] = useState();
     const [addInstNum, setAddInstNum] = useState(999);
-    // const [isGenerating, setIsGenerating] = useState(false);
     const [regenTrigger, setRegenTrigger] = useState(0);
     const [isAdding, setIsAdding] = useState(false);
 
@@ -107,7 +105,6 @@ const MidiView = (props) => {
 
     // 현재 MIDI File을 서버에 보내고, 추가 혹은 수정된 미디 파일을 받는 함수
     const sendMidiToServerLambda = (midi, instNum) => {
-        // props.setIsGenerating(true);
         setIsAdding(true);
 
         // Create FormData object
@@ -181,7 +178,6 @@ const MidiView = (props) => {
                             newMidi.tracks.push(lastTrack);
                             setMidiFile(newMidi);
                         }
-                        // props.setIsGenerating(false);
                         setIsAdding(false);
 
                         receivedData += value;
@@ -194,14 +190,12 @@ const MidiView = (props) => {
                 }
                 // Start reading the response body
                 readResponseBody(reader);
-                // props.setIsGenerating(false)
                 setIsAdding(false)
 
             })
             .catch(error => {
                 props.setShowErrorModal(true);
                 props.setErrorLog(error.message);
-                // props.setIsGenerating(false);
                 setIsAdding(false)
             });
     }
@@ -271,11 +265,6 @@ const MidiView = (props) => {
                     >
                         <p>{fileName}</p>
                     </div> */}
-                    {/* <Row className="mt-2">
-                        <Col>
-
-                        </Col>
-                    </Row> */}
                     <MultiTrackView
                         midiFile={midiFile}
                         isGenerating={props.isGenerating}
@@ -284,7 +273,6 @@ const MidiView = (props) => {
                         setRegenTrackIdx={setRegenTrackIdx}
                         setRegenInstNum={setRegenInstNum}
                         setRegenTrigger={setRegenTrigger}
-                    // setIsGenerating={props.setIsGenerating}
                     />
                     {midiFile ?
                         <Row className="mt-3">
