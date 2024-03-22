@@ -12,6 +12,8 @@ import Row from 'react-bootstrap/Row';
 
 
 const MainView = () => {
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [isAdding, setIsAdding] = useState(false);
     const [midiBlob, setMidiBlob] = useState();
     const [generateConditions, setGenerateConditions] = useState({});
     const [showErrorModal, setShowErrorModal] = useState(false);
@@ -31,17 +33,23 @@ const MainView = () => {
                     <TextPromptView
                         arrWidth={arrWidth}
                         midiBlob={midiBlob}
+                        isGenerating={isGenerating}
                         setMidiBlob={setMidiBlob}
                         setGenerateConditions={setGenerateConditions}
                         setShowErrorModal={setShowErrorModal}
                         setErrorLog={setErrorLog}
+                        setIsGenerating={setIsGenerating}
                     />
                     <MidiView
                         arrWidth={arrWidth}
                         midiBlob={midiBlob}
+                        isGenerating={isGenerating}
+                        isAdding={isAdding}
                         generateConditions={generateConditions}
                         setMidiBlob={setMidiBlob}
                         setShowErrorModal={setShowErrorModal}
+                        setIsGenerating={setIsGenerating}
+                        setIsAdding={setIsAdding}
                         setErrorLog={setErrorLog}
                     />
                 </Row>

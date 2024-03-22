@@ -5,6 +5,7 @@ import Card from 'react-bootstrap/Card';
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col';
 import Button from "react-bootstrap/Button";
+import Spinner from "react-bootstrap/Spinner";
 
 import MultiTrackView from './MultiTrackView.react.js'
 import SampleMidiDropdown from "../utils/SampleMidiDropdown.js";
@@ -47,8 +48,9 @@ const MidiView = (props) => {
     const [regenTrackIdx, setRegenTrackIdx] = useState(null);
     const [regenInstNum, setRegenInstNum] = useState();
     const [addInstNum, setAddInstNum] = useState(999);
-    const [isGenerating, setIsGenerating] = useState(false);
+    // const [isGenerating, setIsGenerating] = useState(false);
     const [regenTrigger, setRegenTrigger] = useState(0);
+    const [isAdding, setIsAdding] = useState(false);
 
     // 서버에서 생성해서 반환해준 미디 파일을 멀티트랙 뷰로 넘겨줌
     useEffect(() => {
@@ -105,7 +107,8 @@ const MidiView = (props) => {
 
     // 현재 MIDI File을 서버에 보내고, 추가 혹은 수정된 미디 파일을 받는 함수
     const sendMidiToServerLambda = (midi, instNum) => {
-        setIsGenerating(true);
+        // props.setIsGenerating(true);
+        setIsAdding(true);
 
         // Create FormData object
         const midiArray = midi.toArray()
@@ -178,7 +181,8 @@ const MidiView = (props) => {
                             newMidi.tracks.push(lastTrack);
                             setMidiFile(newMidi);
                         }
-                        setIsGenerating(false);
+                        // props.setIsGenerating(false);
+                        setIsAdding(false);
 
                         receivedData += value;
 
@@ -190,13 +194,15 @@ const MidiView = (props) => {
                 }
                 // Start reading the response body
                 readResponseBody(reader);
-                setIsGenerating(false)
+                // props.setIsGenerating(false)
+                setIsAdding(false)
 
             })
             .catch(error => {
                 props.setShowErrorModal(true);
                 props.setErrorLog(error.message);
-                setIsGenerating(false);
+                // props.setIsGenerating(false);
+                setIsAdding(false)
             });
     }
 
@@ -272,11 +278,13 @@ const MidiView = (props) => {
                     </Row> */}
                     <MultiTrackView
                         midiFile={midiFile}
-                        isGenerating={isGenerating}
+                        isGenerating={props.isGenerating}
+                        isAdding={isAdding}
                         setMidiFile={setMidiFile}
                         setRegenTrackIdx={setRegenTrackIdx}
                         setRegenInstNum={setRegenInstNum}
                         setRegenTrigger={setRegenTrigger}
+                    // setIsGenerating={props.setIsGenerating}
                     />
                     {midiFile ?
                         <Row className="mt-3">
@@ -285,6 +293,7 @@ const MidiView = (props) => {
                                     className="float-start"
                                     variant="outline-dark"
                                     onClick={handleDownloadMidi}
+                                    disabled={props.isGenerating || isAdding}
                                 >
                                     Download Current MIDI
                                 </Button>
@@ -292,6 +301,8 @@ const MidiView = (props) => {
                                     sampleTitle={sampleTitle}
                                     handleLoadSampleMidi={handleLoadSampleMidi}
                                     setSampleTitle={setSampleTitle}
+                                    isGenerating={props.isGenerating}
+                                    isAdding={isAdding}
                                 />
                                 {/* <Button
                                     className="float-start ms-2"
@@ -310,9 +321,9 @@ const MidiView = (props) => {
                                     <Button
                                         variant="outline-primary"
                                         onClick={handleClickAddInst}
-                                        disabled={isGenerating}
+                                        disabled={props.isGenerating || isAdding}
                                     >
-                                        {isGenerating ? "Adding..." : "Add Inst"}
+                                        {isAdding ? "Adding..." : "Add Inst"}
                                     </Button>
                                 </ButtonGroup>
                             </Col>

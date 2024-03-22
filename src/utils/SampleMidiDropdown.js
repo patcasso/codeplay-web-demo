@@ -13,6 +13,7 @@ const SampleMidiDropdown = (props) => {
             className="float-start ms-2"
             title={props.sampleTitle}
             variant="outline-dark"
+            disabled={props.isGenerating || props.isAdding}
         >
             <Dropdown.Item
                 as="button"
