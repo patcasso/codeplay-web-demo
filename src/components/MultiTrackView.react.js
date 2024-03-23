@@ -61,11 +61,20 @@ const MultiTrackView = (props) => {
   // midiFile prop 내려오면 멀티트랙으로 적용시키기
   useEffect(() => {
     if (props.midiFile) {
+      // props.midiFile Logging
+      console.log(props.midiFile);
+
       // 시간 정보 추출 및 계산
       const msPerBeat = (60 * 1000) / props.midiFile.header.tempos[0].bpm;
-      const totalMsVal = msPerBeat * beatsPerBar * barNumbers;
       const receivedBpm = props.midiFile.header.tempos[0].bpm;
-      const ticksPerBeatVal = props.midiFile.header.ppq;
+      const ticksPerBeatFromMidi = props.midiFile.header.ppq;
+      const beatsPerBarFromMidi = props.midiFile.header.timeSignatures[0].timeSignature[0];
+      const barNumbersFromMidi = Math.round(props.midiFile.durationTicks / ticksPerBeatFromMidi / beatsPerBarFromMidi / 4) * 4; // Math.round to interval of 4
+      const totalMsVal = msPerBeat * beatsPerBarFromMidi * barNumbersFromMidi;
+
+      console.log(`Ticks Per Beat: ${ticksPerBeatFromMidi}`);
+      console.log(`beatsPerBarFromMidi: ${beatsPerBarFromMidi}`);
+      console.log(`barNumbersFromMidi(log only, not used): ${barNumbersFromMidi}`);
 
 
       // MIDI File 및 시간 정보 적용
@@ -73,11 +82,13 @@ const MultiTrackView = (props) => {
       setCurrentTime(0);
       setMsPerBeat(msPerBeat);
       setTotalMs(totalMsVal);
-      setTicksPerBeat(ticksPerBeatVal);
+      setTicksPerBeat(ticksPerBeatFromMidi);
+      setBeatsPerBar(beatsPerBarFromMidi);
+      setBarNumbers(barNumbersFromMidi);
       setBpm(receivedBpm);
 
-      console.log(props.midiFile);
-      console.log(`Ticks Per Beat: ${ticksPerBeatVal}`);
+
+
 
       // instrumentObject 생성
       props.midiFile.tracks.forEach((track, idx) => {
@@ -429,7 +440,14 @@ const MultiTrackView = (props) => {
       <Row className="mt-3" style={{ color: "gray" }}>
         <Col xs={2}>
           {/* <div>Total Time: {(totalMs / 1000).toFixed(1)} (s)</div> */}
-          <div>Current Time: {(currentTime / 1000).toFixed(1)} (s)</div>
+          <div>
+            <span>{(currentTime / 1000).toFixed(1)} (s)</span>
+            <span> / {(totalMs / 1000).toFixed(1)} (s), </span>
+            <span>BPM: {Math.round(bpm)}</span>
+          </div>
+          <div>
+          
+          </div>
         </Col>
         <Col xs={9} style={progressBarStyle} className="mb-2">
           <div style={handleProgressBar()}>▼</div>
