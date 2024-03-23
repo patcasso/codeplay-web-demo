@@ -16,8 +16,8 @@ import { instrumentMap } from "../utils/InstrumentList";
 import { trackColorsArray } from "../utils/trackColors.js";
 import { notePositions } from "../utils/notePositions.js";
 
-const BEATS_PER_BAR = 4;
-const NUM_BARS = 4;
+// const BEATS_PER_BAR = 4;
+// const NUM_BARS = 4;
 
 const progressBarStyle = {
   backgroundColor: "#35a64a",
@@ -33,6 +33,9 @@ const MultiTrackView = (props) => {
   const [midiFile, setMidiFile] = useState();
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
+  const [barNumbers, setBarNumbers] = useState(4);
+  const [beatsPerBar, setBeatsPerBar] = useState(4);
+  const [ticksPerBeat, setTicksPerBeat] = useState(8);
   const [bpm, setBpm] = useState(120);
   const [msPerBeat, setMsPerBeat] = useState(0);
   const [totalMs, setTotalMs] = useState(0);
@@ -59,18 +62,22 @@ const MultiTrackView = (props) => {
   useEffect(() => {
     if (props.midiFile) {
       // 시간 정보 추출 및 계산
-      const msPerBeatValue = (60 * 1000) / props.midiFile.header.tempos[0].bpm;
-      const totalMsCalculated = msPerBeatValue * BEATS_PER_BAR * NUM_BARS;
+      const msPerBeat = (60 * 1000) / props.midiFile.header.tempos[0].bpm;
+      const totalMsVal = msPerBeat * beatsPerBar * barNumbers;
       const receivedBpm = props.midiFile.header.tempos[0].bpm;
+      const ticksPerBeatVal = props.midiFile.header.ppq;
+
 
       // MIDI File 및 시간 정보 적용
       setMidiFile(props.midiFile);
       setCurrentTime(0);
-      setMsPerBeat(msPerBeatValue);
-      setTotalMs(totalMsCalculated);
+      setMsPerBeat(msPerBeat);
+      setTotalMs(totalMsVal);
+      setTicksPerBeat(ticksPerBeatVal);
       setBpm(receivedBpm);
 
       console.log(props.midiFile);
+      console.log(`Ticks Per Beat: ${ticksPerBeatVal}`);
 
       // instrumentObject 생성
       props.midiFile.tracks.forEach((track, idx) => {
@@ -279,23 +286,20 @@ const MultiTrackView = (props) => {
     }
   };
 
-  const handleNoteStyle = (idx, time, duration, nextStartTime, pitch) => {
+  const handleNoteStyle = (noteIdx, barIdx, time, startTicks, durationTicks, duration, nextStartTime, pitch) => {
     const currentTimeSec = currentTime / 1000;
-    const durationPercent = ((duration * 1000) / totalMs) * 100;
-    const leftPercent = (time * 1000) / totalMs * 100;
+    // const durationPercent = ((duration * 1000) / (totalMs / barNumbers)) * 100; // Time based
+    const durationPercent = (durationTicks / (ticksPerBeat * beatsPerBar)) * 100; // Tick based
+    // const leftPercent = (time * 1000 - (barIdx * (totalMs / barNumbers))) / ((totalMs / barNumbers)) * 100; // Time based
+    const leftPercent = (startTicks - (ticksPerBeat * beatsPerBar * barIdx)) / (ticksPerBeat * beatsPerBar) * 100; // Tick based
     const totalNotesNum = Object.keys(notePositions).length;
+    const noteHeight = 14;
 
-    let marginLeft;
+    // console.log(`note.time: ${time}, start ticks: ${startTicks}, barIdx: ${barIdx}, leftPercent: ${leftPercent}`);
+
     let borderStyle;
     let divColor;
     let widthPercent;
-
-    // 첫 note인데 바로 시작하지 않는 경우 예외 처리
-    if (idx == 0 && time != 0) {
-      marginLeft = ((time * 1000) / totalMs) * 100;
-    } else {
-      marginLeft = 0;
-    }
 
     // 현재 재생중인 note 스타일 처리
     if (time < currentTimeSec && currentTimeSec <= nextStartTime) {
@@ -308,7 +312,7 @@ const MultiTrackView = (props) => {
 
     // 마지막 음 duration이 경계 넘어가는 경우 예외 처리
     if (leftPercent + durationPercent > 100) {
-      widthPercent = `${leftPercent + durationPercent - 100}%`;
+      widthPercent = `${100 - leftPercent}%`;
     } else {
       widthPercent = `${durationPercent}%`;
     }
@@ -316,14 +320,14 @@ const MultiTrackView = (props) => {
     return {
       position: "absolute",
       float: "left",
-      padding: "0px",
-      height: "14%",
+      // padding: "0px",
+      height: `${noteHeight}%`,
       // height: `${100 / totalNotesNum}%`,
       border: borderStyle,
       backgroundColor: divColor,
       width: widthPercent,
       left: `${leftPercent}%`,
-      bottom: `${notePositions[pitch]}%`,
+      bottom: `${notePositions[pitch] / 100 * (100 - noteHeight)}%`,
     };
   }
 
@@ -439,13 +443,19 @@ const MultiTrackView = (props) => {
             <SingleTrackView
               key={idx}
               idx={idx}
-              color={assignTrackColor(idx)}
               track={track}
               playing={playing}
               totalMs={totalMs}
               bpm={bpm}
+              ticksPerBeat={ticksPerBeat}
+              beatsPerBar={beatsPerBar}
+              barNumbers={barNumbers}
               soloTrack={soloTrack}
               mutedTracks={mutedTracks}
+              instrumentTrack={instrumentObject[idx]}
+              isGenerating={props.isGenerating}
+              isAdding={props.isAdding}
+              color={assignTrackColor(idx)}
               handleClickRemove={handleClickRemove}
               handleSoloButton={handleSoloButton}
               handleMuteButton={handleMuteButton}
@@ -453,9 +463,6 @@ const MultiTrackView = (props) => {
               setRegenTrackIdx={props.setRegenTrackIdx}
               setRegenInstNum={props.setRegenInstNum}
               setRegenTrigger={props.setRegenTrigger}
-              isGenerating={props.isGenerating}
-              isAdding={props.isAdding}
-              instrumentTrack={instrumentObject[idx]}
             />
           ) : null
         )
