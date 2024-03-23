@@ -106,8 +106,6 @@ const SingleTrackView = (props) => {
             display: "flex",
             alignItems: "flex-end",
             borderLeft: `${Math.ceil(barIdx / props.barNumbers) * 2}px dotted white`,
-            border: "none",
-            borderRadius: "10px"
         }
     }
 
