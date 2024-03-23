@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Button from "react-bootstrap/Button";
+import Spinner from "react-bootstrap/Spinner"
 
 import { getIconName } from "../utils/IconMapping";
 
@@ -15,8 +16,7 @@ import { getIconName } from "../utils/IconMapping";
 
 const SingleTrackView = (props) => {
     const [startTimes, setStartTimes] = useState([]);
-
-
+    const [highlightOn, setHighlightOn] = useState(false);
 
     // Bar Component
     const BarComponent = (barIdx, notes) => {
@@ -32,17 +32,10 @@ const SingleTrackView = (props) => {
         }
 
         return (
-            <div key={barIdx}
-                style={{
-                    height: "100%",
-                    width: `${100 / props.barNumbers}%`,
-                    position: "relative",
-                    display: "flex",
-                    alignItems: "flex-end",
-                    borderLeft: `${Math.ceil(barIdx / props.barNumbers) * 2}px dotted white`,
-                    // border:"1.5px solid red",
-                    // borderRadius: "10px",
-                }}>
+            <div
+                key={barIdx}
+                style={handleBarStyle(barIdx)}
+            >
                 {notes.map((note, idx) => (
                     getBarNotes(note.ticks) ?
                         <div
@@ -61,12 +54,11 @@ const SingleTrackView = (props) => {
                                     ? note.time + note.duration
                                     // : startTimes[startTimes.indexOf(relativeToAbsoluteTime(note.time, props.bpm)) + 1],
                                     : startTimes[startTimes.indexOf(note.time) + 1],
-                                note.pitch
+                                note.pitch,
+                                highlightOn
                             )}>
-                        </div>
-                        :
-                        null
-                ))}
+                        </div> : null))
+                }
             </div>
         )
     }
@@ -105,6 +97,18 @@ const SingleTrackView = (props) => {
     } else {
         instNum = props.track.instrument.number;
     }
+
+    const handleBarStyle = (barIdx) => {
+        return {
+            height: "100%",
+            width: `${100 / props.barNumbers}%`,
+            position: "relative",
+            display: "flex",
+            alignItems: "flex-end",
+            borderLeft: `${Math.ceil(barIdx / props.barNumbers) * 2}px dotted white`,
+        }
+    }
+
 
     return (
         <Row key={props.idx}>
@@ -149,18 +153,11 @@ const SingleTrackView = (props) => {
             </Col>
             <Col xs={9}>
                 <Row
-                    className="ps-1 pe-1 pt-2 d-flex"
+                    className="ps-1 pe-1 pt-2 pb-1 d-flex"
                     style={trackAreaStyle}>
-                    {/* <div style={{
-                        height: "100%",
-                        position: "relative",
-                        display: "flex",
-                        alignItems: "flex-end"
-                    }}> */}
                     {[...Array(props.barNumbers)].map((_, index) => (
                         BarComponent(index, props.track.notes)
                     ))}
-                    {/* </div> */}
                 </Row>
             </Col>
             <Col xs={1} className="d-flex align-items-center">
@@ -169,8 +166,20 @@ const SingleTrackView = (props) => {
                     variant="outline-primary"
                     onClick={handleClickRegenerate}
                     disabled={props.isGenerating || props.isAdding || props.playing}
+                    onMouseEnter={() => setHighlightOn(true)}
+                    onMouseLeave={() => setHighlightOn(false)}
                 >
-                    ↺
+                    {props.isAdding && props.regenTrackIdx == props.idx ?
+                        <Spinner
+                            // size="sm"
+                            className="m-0 p-0"
+                            style={{ width: '0.8rem', height: '0.8rem', borderWidth: '2px' }}
+                            variant="primary"
+                            animation="border"
+                            role="status"
+                        >
+                            <span className="visually-hidden">Loading...</span>
+                        </Spinner> : "↺"}
                 </Button>
             </Col>
         </Row>

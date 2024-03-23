@@ -273,6 +273,7 @@ const MidiView = (props) => {
                         midiFile={midiFile}
                         isGenerating={props.isGenerating}
                         isAdding={isAdding}
+                        regenTrackIdx={regenTrackIdx}
                         setMidiFile={setMidiFile}
                         setRegenTrackIdx={setRegenTrackIdx}
                         setRegenInstNum={setRegenInstNum}
