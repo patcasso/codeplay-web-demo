@@ -42,7 +42,7 @@ const readFileAsArrayBuffer = (file) => {
 // Main component
 const MidiView = (props) => {
     const [midiFile, setMidiFile] = useState();
-    // const [fileName, setFileName] = useState("Drag and drop MIDI file here (4 Bars only!)")
+    const [fileName, setFileName] = useState("Drag and drop MIDI file here")
     const [sampleTitle, setSampleTitle] = useState("Sample MIDI");
     const [regenTrackIdx, setRegenTrackIdx] = useState(null);
     const [regenInstNum, setRegenInstNum] = useState();
@@ -69,25 +69,25 @@ const MidiView = (props) => {
     }, [regenTrigger])
 
     // 드래그 앤 드롭으로 올린 미디 파일을 멀티트랙 뷰로 보내고 서버에 전송 가능한 형태로 준비시킴
-    // const handleFileDrop = async (event) => {
-    //     event.preventDefault();
+    const handleFileDrop = async (event) => {
+        event.preventDefault();
 
-    //     const file = event.dataTransfer.files[0];
+        const file = event.dataTransfer.files[0];
 
-    //     if (file) {
-    //         try {
-    //             setMidiFileRaw(file);
+        if (file) {
+            try {
+                // setMidiFileRaw(file);
 
-    //             const arrayBuffer = await readFileAsArrayBuffer(file);
-    //             const midi = new Midi(arrayBuffer)
+                const arrayBuffer = await readFileAsArrayBuffer(file);
+                const midi = new Midi(arrayBuffer)
 
-    //             setMidiFile(midi);
-    //             setFileName(file.name);
-    //         } catch (error) {
-    //             console.error('Error parsing MIDI file:', error);
-    //         }
-    //     }
-    // };
+                setMidiFile(midi);
+                setFileName(file.name);
+            } catch (error) {
+                console.error('Error parsing MIDI file:', error);
+            }
+        }
+    };
 
     // 특정 악기를 Regenerate 하도록 하면, 해당 악기 번호와 해당 악기만 제외한 미디 파일을 서버로 전달
     const regenerateSingleInstrument = () => {
@@ -251,20 +251,24 @@ const MidiView = (props) => {
                     Generated Music
                 </Card.Header>
                 <Card.Body>
-                    {/* <div
+                    <div
                         onDrop={handleFileDrop}
                         onDragOver={handleDragOver}
                         style={{
                             width: '100%',
-                            height: '6vh',
+                            height: '5vh',
                             display: 'flex',
                             justifyContent: 'center',
                             alignItems: 'center',
-                            border: '2px dashed #aaa',
+                            border: '1.5px dashed #aaa',
+                            marginBottom: "10px",
                         }}
                     >
-                        <p>{fileName}</p>
-                    </div> */}
+                        <span>
+                            <img src="./inst_icons/disc.png" width="25px" className="me-2"/>
+                            {fileName}
+                        </span>
+                    </div>
                     <MultiTrackView
                         midiFile={midiFile}
                         isGenerating={props.isGenerating}

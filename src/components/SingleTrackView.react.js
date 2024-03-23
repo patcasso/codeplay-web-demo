@@ -148,7 +148,7 @@ const SingleTrackView = (props) => {
             </Col>
             <Col xs={9}>
                 <Row
-                    className="ps-0 pt-2 d-flex"
+                    className="ps-1 pe-1 pt-2 d-flex"
                     style={trackAreaStyle}>
                     {/* <div style={{
                         height: "100%",
