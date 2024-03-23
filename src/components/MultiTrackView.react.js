@@ -20,6 +20,8 @@ import { notePositions } from "../utils/notePositions.js";
 // const NUM_BARS = 4;
 
 const progressBarStyle = {
+  position: 'relative',
+  // width: '100%',
   backgroundColor: "#35a64a",
   // border: "1.5px solid #529e67",
   borderRadius: "7px"
@@ -33,7 +35,7 @@ const MultiTrackView = (props) => {
   const [midiFile, setMidiFile] = useState();
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [barNumbers, setBarNumbers] = useState(4);
+  const [barNumbers, setBarNumbers] = useState(0);
   const [beatsPerBar, setBeatsPerBar] = useState(4);
   const [ticksPerBeat, setTicksPerBeat] = useState(8);
   const [bpm, setBpm] = useState(120);
@@ -43,6 +45,7 @@ const MultiTrackView = (props) => {
   const [soloTrack, setSoloTrack] = useState([]);
   const [mutedTracks, setMutedTracks] = useState([]);
   const [instrumentObject, setInstrumentObject] = useState({});
+  const [barsToRegen, setBarsToRegen] = useState([0, 3]);
 
 
   // currentTime 업데이트
@@ -248,6 +251,25 @@ const MultiTrackView = (props) => {
     return trackColorsArray[idx % trackColorsArray.length]
   }
 
+  // Sub Components
+
+  const BarHeaderComponent = (index) => {
+
+    return (
+      <div
+        key={index}
+        style={{
+          width: `${100 / barNumbers}%`,
+          color: "white",
+          fontSize: "0.7rem",
+          opacity: 0.7
+        }}
+      >
+        {index + 1}
+      </div>
+    )
+  }
+
 
   // Event Handlers
   const handleClickPlay = () => {
@@ -297,7 +319,7 @@ const MultiTrackView = (props) => {
     }
   };
 
-  const handleNoteStyle = (noteIdx, barIdx, time, startTicks, durationTicks, duration, nextStartTime, pitch) => {
+  const handleNoteStyle = (noteIdx, barIdx, time, startTicks, durationTicks, duration, nextStartTime, pitch, highlightOn) => {
     const currentTimeSec = currentTime / 1000;
     // const durationPercent = ((duration * 1000) / (totalMs / barNumbers)) * 100; // Time based
     const durationPercent = (durationTicks / (ticksPerBeat * beatsPerBar)) * 100; // Tick based
@@ -311,11 +333,15 @@ const MultiTrackView = (props) => {
     let borderStyle;
     let divColor;
     let widthPercent;
+    let boxShadow = "none";
 
     // 현재 재생중인 note 스타일 처리
     if (time < currentTimeSec && currentTimeSec <= nextStartTime) {
       divColor = "#ffbaba";
       borderStyle = `1px solid #eb4b5d`;
+    } else if (highlightOn && barIdx >= barsToRegen[0] && barIdx <= barsToRegen[1]) {
+      divColor = "#e3e5fc";
+      borderStyle = `1px solid #a4a7fc`;
     } else {
       divColor = "white";
       borderStyle = `1px solid #bdbbbb`;
@@ -339,11 +365,20 @@ const MultiTrackView = (props) => {
       width: widthPercent,
       left: `${leftPercent}%`,
       bottom: `${notePositions[pitch] / 100 * (100 - noteHeight)}%`,
+      boxShadow: boxShadow
     };
   }
 
   const handleProgressBar = () => {
-    return { color: "white", marginLeft: `${(currentTime / totalMs) * 100}%` };
+    return {
+      position: 'absolute',
+      height: '100%',
+      top: 0,
+      color: "white",
+      marginLeft: `${(currentTime / totalMs) * 100}%`,
+      display: 'flex',
+      alignItems: 'center', // Vertically center the content
+    };
   };
 
   const handleSoloButton = (idx) => {
@@ -419,14 +454,14 @@ const MultiTrackView = (props) => {
           >
             ▶
           </Button>
-          <Button
+          {/* <Button
             className="ms-2"
             variant="dark"
             onClick={handleClickEnd}
             disabled={props.isGenerating}
           >
             ▶▶
-          </Button>
+          </Button> */}
           <Button
             disabled={props.isGenerating}
             className="ms-2 float-middle"
@@ -446,10 +481,15 @@ const MultiTrackView = (props) => {
             <span>BPM: {Math.round(bpm)}</span>
           </div>
           <div>
-          
+
           </div>
         </Col>
-        <Col xs={9} style={progressBarStyle} className="mb-2">
+        <Col xs={9} style={progressBarStyle} className="mb-2 p-0">
+          <div style={{ display: 'flex', paddingLeft: "5px" }}>
+            {[...Array(barNumbers)].map((_, index) => (
+              BarHeaderComponent(index)
+            ))}
+          </div>
           <div style={handleProgressBar()}>▼</div>
         </Col>
         <Col xs={1}>
@@ -471,6 +511,8 @@ const MultiTrackView = (props) => {
               soloTrack={soloTrack}
               mutedTracks={mutedTracks}
               instrumentTrack={instrumentObject[idx]}
+              barsToRegen={barsToRegen}
+              regenTrackIdx={props.regenTrackIdx}
               isGenerating={props.isGenerating}
               isAdding={props.isAdding}
               color={assignTrackColor(idx)}
