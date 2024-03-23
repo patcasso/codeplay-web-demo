@@ -7,19 +7,74 @@ import Button from "react-bootstrap/Button";
 
 import { getIconName } from "../utils/IconMapping";
 
-const relativeToAbsoluteTime = (relativeTime, bpm) => {
-    // return relativeTime * 120 / bpm;
-    return relativeTime;
-}
+// const relativeToAbsoluteTime = (relativeTime, bpm) => {
+//     // return relativeTime * 120 / bpm;
+//     return relativeTime;
+// }
+
 
 const SingleTrackView = (props) => {
     const [startTimes, setStartTimes] = useState([]);
 
+
+
+    // Bar Component
+    const BarComponent = (barIdx, notes) => {
+
+        // 필요한 정보 : Bar Index, ticks per beat(ppq)
+        // console.log(`Bar ${index} of track${props.idx}`);
+        // console.log(`Ticks Per Beat: ${props.ticksPerBeat}`);
+
+        const getBarNotes = (ticks) => {
+            return (ticks >= barIdx * props.ticksPerBeat * props.beatsPerBar) &&
+                (ticks < (barIdx + 1) * props.ticksPerBeat * props.beatsPerBar)
+                ? true : false;
+        }
+
+        return (
+            <div key={barIdx}
+                style={{
+                    height: "100%",
+                    width: `${100 / props.barNumbers}%`,
+                    position: "relative",
+                    display: "flex",
+                    alignItems: "flex-end",
+                    borderLeft: `${Math.ceil(barIdx / props.barNumbers) * 2}px dotted white`,
+                    // border:"1.5px solid red",
+                    // borderRadius: "10px",
+                }}>
+                {notes.map((note, idx) => (
+                    getBarNotes(note.ticks) ?
+                        <div
+                            key={idx}
+                            style={props.handleNoteStyle(
+                                idx,
+                                barIdx,
+                                // relativeToAbsoluteTime(note.time, props.bpm),
+                                note.time,
+                                note.ticks,
+                                note.durationTicks,
+                                note.duration,
+                                // relativeToAbsoluteTime(note.time, props.bpm) == startTimes[startTimes.length - 1]
+                                note.time == startTimes[startTimes.length - 1]
+                                    ? props.totalMs / 1000
+                                    // : startTimes[startTimes.indexOf(relativeToAbsoluteTime(note.time, props.bpm)) + 1],
+                                    : startTimes[startTimes.indexOf(note.time) + 1],
+                                note.pitch
+                            )}>
+                        </div>
+                        :
+                        null
+                ))}
+            </div>
+        )
+    }
+
     useEffect(() => {
         let startTimeSet = new Set();
         props.track.notes.forEach((note) => {
-            // startTimeSet.add(note.time);
-            startTimeSet.add(relativeToAbsoluteTime(note.time, props.bpm));
+            startTimeSet.add(note.time);
+            // startTimeSet.add(relativeToAbsoluteTime(note.time, props.bpm));
         })
         const startTimeArray = Array.from(startTimeSet);
         setStartTimes(startTimeArray);
@@ -27,11 +82,13 @@ const SingleTrackView = (props) => {
 
     const trackAreaStyle = {
         backgroundColor: props.color,
+        // opacity: 1,
         height: '7vh',
         borderRadius: '10px',
         marginBottom: '7px',
         alignItems: "flex-end"
     }
+
     const handleClickRegenerate = () => {
         if (props.track.instrument.percussion === true) {
             props.setRegenInstNum(-1);
@@ -91,29 +148,18 @@ const SingleTrackView = (props) => {
             </Col>
             <Col xs={9}>
                 <Row
-                    className="p-2 d-flex"
+                    className="ps-0 pt-2 d-flex"
                     style={trackAreaStyle}>
-                    <div style={{
+                    {/* <div style={{
                         height: "100%",
                         position: "relative",
                         display: "flex",
                         alignItems: "flex-end"
-                    }}>
-                        {props.track.notes.map((note, idx) => (
-                            <div
-                                key={idx}
-                                style={props.handleNoteStyle(
-                                    idx,
-                                    relativeToAbsoluteTime(note.time, props.bpm),
-                                    note.duration,
-                                    relativeToAbsoluteTime(note.time, props.bpm) == startTimes[startTimes.length - 1]
-                                        ? props.totalMs / 1000
-                                        : startTimes[startTimes.indexOf(relativeToAbsoluteTime(note.time, props.bpm)) + 1],
-                                    note.pitch
-                                )}>
-                            </div>
-                        ))}
-                    </div>
+                    }}> */}
+                    {[...Array(props.barNumbers)].map((_, index) => (
+                        BarComponent(index, props.track.notes)
+                    ))}
+                    {/* </div> */}
                 </Row>
             </Col>
             <Col xs={1} className="d-flex align-items-center">
