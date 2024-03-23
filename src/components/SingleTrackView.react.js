@@ -57,7 +57,8 @@ const SingleTrackView = (props) => {
                                 note.duration,
                                 // relativeToAbsoluteTime(note.time, props.bpm) == startTimes[startTimes.length - 1]
                                 note.time == startTimes[startTimes.length - 1]
-                                    ? props.totalMs / 1000
+                                    // ? props.totalMs / 1000
+                                    ? note.time + note.duration
                                     // : startTimes[startTimes.indexOf(relativeToAbsoluteTime(note.time, props.bpm)) + 1],
                                     : startTimes[startTimes.indexOf(note.time) + 1],
                                 note.pitch
