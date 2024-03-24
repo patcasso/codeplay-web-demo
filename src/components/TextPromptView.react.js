@@ -7,6 +7,10 @@ import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import InputGroup from 'react-bootstrap/InputGroup';
 import Button from 'react-bootstrap/Button';
+import Dropdown from "react-bootstrap/Dropdown";
+import DropdownButton from "react-bootstrap/DropdownButton";
+import ButtonGroup from "react-bootstrap/ButtonGroup";
+
 import Spinner from 'react-bootstrap/Spinner';
 
 import { examplePrompts } from "../utils/examplePrompts.js";
@@ -31,8 +35,16 @@ const readFileAsArrayBuffer = (file) => {
 };
 
 // Example Prompts 중 n개 뽑아오는 함수
-const returnRandomPrompts = (n) => {
-  const promptsArray = Object.entries(examplePrompts);
+const returnRandomPrompts = (n, lang) => {
+
+  let exampleObjByLanguage;
+  if (lang == "EN") {
+    exampleObjByLanguage = examplePrompts["EN"];
+  } else if (lang == "KR") {
+    exampleObjByLanguage = examplePrompts["KR"];
+  }
+
+  const promptsArray = Object.entries(exampleObjByLanguage);
   const result = [];
   const len = promptsArray.length;
 
@@ -55,10 +67,43 @@ const returnRandomPrompts = (n) => {
 
 
 const TextPromptView = (props) => {
+  const [language, setLanguage] = useState("EN")
   const [prompt, setPrompt] = useState("");
   const [showTextPrompt, setShowTextPrompt] = useState(true);
-  const [examplePromptsObj, setExamplePromptsObj] = useState(returnRandomPrompts(3));
+  const [examplePromptsObj, setExamplePromptsObj] = useState(returnRandomPrompts(3, language));
+  // const [examplePromptsObj, setExamplePromptsObj] = useState({});
 
+  useEffect(() => {
+    const newPromptsObj = returnRandomPrompts(3, language);
+    setExamplePromptsObj(newPromptsObj);
+  }, [language])
+
+  const LangSelectButton = () => {
+    return (
+      <Dropdown>
+        <Dropdown.Toggle
+          variant="outline-secondary"
+          className="float-end me-2"
+          id="dropdown-basic"
+          size="sm"
+        >
+          {language}
+        </Dropdown.Toggle>
+        <Dropdown.Menu>
+          <Dropdown.Item
+            onClick={() => { setLanguage("EN") }}
+          >
+            English
+          </Dropdown.Item>
+          <Dropdown.Item
+            onClick={() => { setLanguage("KR") }}
+          >
+            Korean
+          </Dropdown.Item>
+        </Dropdown.Menu>
+      </Dropdown >
+    )
+  }
 
   const PromptCards = ({ prompt }) => {
     const [isHovered, setIsHovered] = useState(false);
@@ -106,7 +151,7 @@ const TextPromptView = (props) => {
         style={buttonStyle}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        onClick={() => { setExamplePromptsObj(returnRandomPrompts(3)) }}
+        onClick={() => { setExamplePromptsObj(returnRandomPrompts(3, language)) }}
       >
         ↺
       </Button>
@@ -235,6 +280,7 @@ const TextPromptView = (props) => {
               >
                 {showTextPrompt ? "Hide" : "Show"}
               </Button>
+              <LangSelectButton />
             </Col>
           </Row>
         </Card.Header>
@@ -245,7 +291,7 @@ const TextPromptView = (props) => {
                 <Form.Control
                   id="prompt-input-field"
                   type="text"
-                  placeholder="Enter your prompt..."
+                  placeholder={language === "EN" ? "Enter your prompt..." : language === "KR" ? "어떤 음악을 만들고 싶으신가요?" : null}
                   value={prompt}
                   onChange={(event) => {
                     console.log(event.target.value.length);
@@ -272,7 +318,7 @@ const TextPromptView = (props) => {
                 <Row>
                   {examplePromptsObj.map((example) => {
                     return (
-                      <Col key={example[0]} md={4}>
+                      <Col key={example[0]} md={4} className="d-flex justify-content-center align-items-center">
                         <PromptCards prompt={example[1]} />
                       </Col>
                     )

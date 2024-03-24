@@ -1,8 +1,8 @@
 import React from "react";
 
-import { Dropdown } from "react-bootstrap";
-import { DropdownButton } from "react-bootstrap";
-import { ButtonGroup } from "react-bootstrap";
+import Dropdown from "react-bootstrap/Dropdown";
+import DropdownButton from "react-bootstrap/DropdownButton";
+import ButtonGroup from "react-bootstrap/ButtonGroup";
 
 
 const SampleMidiDropdown = (props) => {

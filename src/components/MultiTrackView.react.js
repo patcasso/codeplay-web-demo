@@ -35,7 +35,6 @@ const MultiTrackView = (props) => {
   const [midiFile, setMidiFile] = useState();
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [barNumbers, setBarNumbers] = useState(0);
   const [beatsPerBar, setBeatsPerBar] = useState(4);
   const [ticksPerBeat, setTicksPerBeat] = useState(8);
   const [bpm, setBpm] = useState(120);
@@ -45,7 +44,7 @@ const MultiTrackView = (props) => {
   const [soloTrack, setSoloTrack] = useState([]);
   const [mutedTracks, setMutedTracks] = useState([]);
   const [instrumentObject, setInstrumentObject] = useState({});
-  const [barsToRegen, setBarsToRegen] = useState([0, 3]);
+  const [infillBarIdx, setInfillBarIdx] = useState();
 
 
   // currentTime 업데이트
@@ -87,7 +86,7 @@ const MultiTrackView = (props) => {
       setTotalMs(totalMsVal);
       setTicksPerBeat(ticksPerBeatFromMidi);
       setBeatsPerBar(beatsPerBarFromMidi);
-      setBarNumbers(barNumbersFromMidi);
+      props.setTotalBars(barNumbersFromMidi);
       setBpm(receivedBpm);
 
 
@@ -252,20 +251,35 @@ const MultiTrackView = (props) => {
   }
 
   // Sub Components
-
   const BarHeaderComponent = (index) => {
+
+    const headerStyle = {
+      width: `${100 / props.totalBars}%`,
+      color: "white",
+      fontSize: "0.7rem",
+      opacity: 0.7,
+      backgroundColor: index === infillBarIdx ? "#7591ff" : "transparent",
+      cursor: index === infillBarIdx ? "pointer" : "auto"
+    }
 
     return (
       <div
         key={index}
-        style={{
-          width: `${100 / barNumbers}%`,
-          color: "white",
-          fontSize: "0.7rem",
-          opacity: 0.7
-        }}
+        style={headerStyle}
+        onMouseEnter={() => { setInfillBarIdx(index) }}
+        onMouseLeave={() => { setInfillBarIdx(null) }}
+        onClick={() => { props.handleClickInfill(index) }}
       >
-        {index + 1}
+        {infillBarIdx === index ?
+          <div>
+            <span style={{ width: "10%" }}>
+              {index + 1}
+            </span>
+            <span style={{ color: "white", fontWeight: "bold", textAlign: "center", display: "inline-block", width: "90%", textAlign: "center" }}>
+              ↺
+            </span>
+          </div> :
+          <span>{index + 1}</span>}
       </div>
     )
   }
@@ -321,9 +335,7 @@ const MultiTrackView = (props) => {
 
   const handleNoteStyle = (noteIdx, barIdx, time, startTicks, durationTicks, duration, nextStartTime, pitch, highlightOn) => {
     const currentTimeSec = currentTime / 1000;
-    // const durationPercent = ((duration * 1000) / (totalMs / barNumbers)) * 100; // Time based
     const durationPercent = (durationTicks / (ticksPerBeat * beatsPerBar)) * 100; // Tick based
-    // const leftPercent = (time * 1000 - (barIdx * (totalMs / barNumbers))) / ((totalMs / barNumbers)) * 100; // Time based
     const leftPercent = (startTicks - (ticksPerBeat * beatsPerBar * barIdx)) / (ticksPerBeat * beatsPerBar) * 100; // Tick based
     const totalNotesNum = Object.keys(notePositions).length;
     const noteHeight = 14;
@@ -339,12 +351,15 @@ const MultiTrackView = (props) => {
     if (time < currentTimeSec && currentTimeSec <= nextStartTime) {
       divColor = "#ffbaba";
       borderStyle = `1px solid #eb4b5d`;
-    } else if (highlightOn && barIdx >= barsToRegen[0] && barIdx <= barsToRegen[1]) {
+    } else if (highlightOn && barIdx >= props.barsToRegen[0] && barIdx <= props.barsToRegen[1]) {
+      divColor = "#e3e5fc";
+      borderStyle = `1px solid #a4a7fc`;
+    } else if (barIdx === infillBarIdx) {
       divColor = "#e3e5fc";
       borderStyle = `1px solid #a4a7fc`;
     } else {
       divColor = "white";
-      borderStyle = `1px solid #bdbbbb`;
+      borderStyle = `1px solid #adadad`;
     }
 
     // 마지막 음 duration이 경계 넘어가는 경우 예외 처리
@@ -486,7 +501,7 @@ const MultiTrackView = (props) => {
         </Col>
         <Col xs={9} style={progressBarStyle} className="mb-2 p-0">
           <div style={{ display: 'flex', paddingLeft: "5px" }}>
-            {[...Array(barNumbers)].map((_, index) => (
+            {[...Array(props.totalBars)].map((_, index) => (
               BarHeaderComponent(index)
             ))}
           </div>
@@ -507,11 +522,11 @@ const MultiTrackView = (props) => {
               bpm={bpm}
               ticksPerBeat={ticksPerBeat}
               beatsPerBar={beatsPerBar}
-              barNumbers={barNumbers}
+              totalBars={props.totalBars}
               soloTrack={soloTrack}
               mutedTracks={mutedTracks}
               instrumentTrack={instrumentObject[idx]}
-              barsToRegen={barsToRegen}
+              barsToRegen={props.barsToRegen}
               regenTrackIdx={props.regenTrackIdx}
               isGenerating={props.isGenerating}
               isAdding={props.isAdding}

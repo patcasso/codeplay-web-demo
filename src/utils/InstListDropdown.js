@@ -31,7 +31,7 @@ const InstListDropdown = (props) => {
                 id="dropdown-basic"
             >
                 <span style={{ display: 'inline-flex', alignItems: 'center' }}>
-                    <img src={`./inst_icons/${getIconName(props.addInstNum)}.png`} width="16px" style={{ marginRight: "5px" }} />
+                    <img src={`./inst_icons/${getIconName(props.addInstNum)}.png`} width="14px" style={{ marginRight: "5px" }} />
                     {instNumToName()}
                 </span>
             </Dropdown.Toggle>

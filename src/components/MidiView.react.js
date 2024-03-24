@@ -49,6 +49,8 @@ const MidiView = (props) => {
     const [addInstNum, setAddInstNum] = useState(999);
     const [regenTrigger, setRegenTrigger] = useState(0);
     const [isAdding, setIsAdding] = useState(false);
+    const [totalBars, setTotalBars] = useState(0);
+    const [barsToRegen, setBarsToRegen] = useState([0, 3]);
 
     // 서버에서 생성해서 반환해준 미디 파일을 멀티트랙 뷰로 넘겨줌
     useEffect(() => {
@@ -96,7 +98,7 @@ const MidiView = (props) => {
                 // Index에 해당하는 악기만 빼서 다시 정의
                 const newMidi = midiFile.clone();
                 newMidi.tracks.splice(regenTrackIdx, 1);
-                sendMidiToServerLambda(newMidi, regenInstNum);
+                sendMidiToServerLambda({ operateType: "regen", midi: newMidi, instNum: regenInstNum });
             } catch (error) {
                 console.error('Error Regenerating Single Instrument:', error)
             }
@@ -104,24 +106,45 @@ const MidiView = (props) => {
     }
 
     // 현재 MIDI File을 서버에 보내고, 추가 혹은 수정된 미디 파일을 받는 함수
-    const sendMidiToServerLambda = (midi, instNum) => {
+    const sendMidiToServerLambda = ({ operateType, midi, instNum, regenBarIndex }) => {
         setIsAdding(true);
 
         // Create FormData object
         const midiArray = midi.toArray()
         const base64Data = btoa(String.fromCharCode.apply(null, midiArray));
 
-        // Make the POST request using fetch
-        fetch("https://gtwdvfyoj9.execute-api.ap-northeast-2.amazonaws.com/default/codeplaySendMidiToServer", { // AWS API Gateway Endpoint
-            method: 'POST',
-            headers: { "Content-Type": 'application/json', "Accept": "*/*" },
-            body: JSON.stringify({
+        // Operate Type에 따라 url 및 body 데이터 및 지정
+        let url;
+        let bodyData;
+        if (operateType === "add" || operateType === "regen") {
+            url = "https://hye8o7tt0m.execute-api.ap-northeast-2.amazonaws.com/default/codePlaySendMidiToServer2"; // AWS API Gateway Endpoint
+            bodyData = JSON.stringify({
                 "midi": base64Data,
                 "instnum": instNum,
                 "emotion": props.generateConditions.emotion,
                 "tempo": props.generateConditions.tempo,
                 "genre": props.generateConditions.genre
+            });
+        } else if (operateType === "extend") {
+            console.log(`Extend Midi to 8 bars`);
+            url = "https://eqipz7j6o7.execute-api.ap-northeast-2.amazonaws.com/default/codeplayExtendMidi"; // AWS API Gateway Endpoint
+            bodyData = JSON.stringify({
+                "midi": base64Data
             })
+        } else if (operateType === "infill") {
+            console.log(`regenBarIndex: ${regenBarIndex}`);
+            url = "https://65yj39pow7.execute-api.ap-northeast-2.amazonaws.com/default/codeplayInfillMidi";
+            bodyData = JSON.stringify({
+                "midi": base64Data,
+                "regenBarIndex": regenBarIndex,
+            })
+        }
+
+        // Make the POST request using fetch
+        fetch(url, {
+            method: 'POST',
+            headers: { "Content-Type": 'application/json', "Accept": "*/*" },
+            body: bodyData
         })
             .then((response) => {
                 const reader = response.body.getReader();
@@ -202,11 +225,20 @@ const MidiView = (props) => {
 
     const handleClickAddInst = () => {
         if (addInstNum >= -1 && addInstNum <= 127) {
-            sendMidiToServerLambda(midiFile, addInstNum);
+            sendMidiToServerLambda({ operateType: "add", midi: midiFile, instNum: addInstNum });
         } else {
             // 특정 악기 정하지 않고 그냥 Add Track하는 경우 예외 처리
-            sendMidiToServerLambda(midiFile, 999);
+            sendMidiToServerLambda({ operateType: "add", midi: midiFile, instNum: 999 });
         }
+    }
+
+    const handleClickExtend = () => {
+        sendMidiToServerLambda({ operateType: "extend", midi: midiFile });
+    }
+
+    const handleClickInfill = (barIndex) => {
+        console.log(`bar ${barIndex}'s all tracks will be regenerated`);
+        sendMidiToServerLambda({ operateType: "infill", midi: midiFile, regenBarIndex: barIndex });
     }
 
     const handleDownloadMidi = () => {
@@ -264,16 +296,21 @@ const MidiView = (props) => {
                             marginBottom: "10px",
                         }}
                     >
-                        <span>
-                            <img src="./inst_icons/disc.png" width="25px" className="me-2"/>
+                        <span style={{ color: "gray" }}>
+                            <img src="./inst_icons/disc.png" width="25px" className="me-2" />
                             {fileName}
                         </span>
                     </div>
                     <MultiTrackView
                         midiFile={midiFile}
-                        isGenerating={props.isGenerating}
+                        totalBars={totalBars}
                         isAdding={isAdding}
                         regenTrackIdx={regenTrackIdx}
+                        barsToRegen={barsToRegen}
+                        isGenerating={props.isGenerating}
+                        setTotalBars={setTotalBars}
+                        setBarsToRegen={setBarsToRegen}
+                        handleClickInfill={handleClickInfill}
                         setMidiFile={setMidiFile}
                         setRegenTrackIdx={setRegenTrackIdx}
                         setRegenInstNum={setRegenInstNum}
@@ -281,7 +318,7 @@ const MidiView = (props) => {
                     />
                     {midiFile ?
                         <Row className="mt-3">
-                            <Col xs={8}>
+                            <Col>
                                 <Button
                                     className="float-start"
                                     variant="outline-dark"
@@ -305,8 +342,8 @@ const MidiView = (props) => {
                                     Error!
                                 </Button> */}
                             </Col>
-                            <Col xs={4}>
-                                <ButtonGroup className="float-end me-4">
+                            <Col>
+                                <ButtonGroup className="float-end me-2">
                                     <InstListDropdown
                                         addInstNum={addInstNum}
                                         setAddInstNum={setAddInstNum}
@@ -319,6 +356,14 @@ const MidiView = (props) => {
                                         {isAdding ? "Adding..." : "Add Inst"}
                                     </Button>
                                 </ButtonGroup>
+                                <Button
+                                    disabled={totalBars === 8}
+                                    variant="outline-dark"
+                                    className="float-end me-2"
+                                    onClick={handleClickExtend}
+                                >
+                                    Extend to 8 bars (+)
+                                </Button>
                             </Col>
                         </Row> : null
                     }

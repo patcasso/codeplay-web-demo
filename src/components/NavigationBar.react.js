@@ -22,11 +22,17 @@ function NavBar(props) {
                 <Navbar.Toggle aria-controls="basic-navbar-nav" />
                 <Navbar.Collapse className="justify-content-end">
                     <Nav className="me-auto">
-                        <Nav.Link href="#home">Info</Nav.Link>
+                        <Nav.Link
+                            onClick={() => { props.setShowInfoModal(true) }}
+                        >
+                            Info
+                        </Nav.Link>
                         <Nav.Link
                             onClick={() => { props.setShowTutorialModal(true) }}
                         // href="#link"
-                        >Tutorial</Nav.Link>
+                        >
+                            Tutorial
+                        </Nav.Link>
                         {/* <NavDropdown title="Menu" id="basic-nav-dropdown">
                             <NavDropdown.Item href="#action/3.1">Action</NavDropdown.Item>
                             <NavDropdown.Item href="#action/3.2">
@@ -40,13 +46,13 @@ function NavBar(props) {
                         </NavDropdown> */}
                     </Nav>
                     <Navbar.Text
-                    style={{ textAlign: "right", fontSize: "0.6em" }}
-                    className="m-0 p-0"
-                >
-                    {/* <span>codeplay@codeplay.com</span> */}
-                    {/* <br /> */}
-                    {/* <span>© 2024 NLP07-CodePlay CO. ALL RIGHTS RESERVED</span> */}
-                </Navbar.Text>
+                        style={{ textAlign: "right", fontSize: "0.6em" }}
+                        className="m-0 p-0"
+                    >
+                        {/* <span>codeplay@codeplay.com</span> */}
+                        {/* <br /> */}
+                        {/* <span>© 2024 NLP07-CodePlay CO. ALL RIGHTS RESERVED</span> */}
+                    </Navbar.Text>
                 </Navbar.Collapse>
 
             </Container>
