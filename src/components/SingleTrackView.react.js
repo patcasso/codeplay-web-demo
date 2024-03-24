@@ -101,11 +101,11 @@ const SingleTrackView = (props) => {
     const handleBarStyle = (barIdx) => {
         return {
             height: "100%",
-            width: `${100 / props.barNumbers}%`,
+            width: `${100 / props.totalBars}%`,
             position: "relative",
             display: "flex",
             alignItems: "flex-end",
-            borderLeft: `${Math.ceil(barIdx / props.barNumbers) * 2}px dotted white`,
+            borderLeft: `${Math.ceil(barIdx / props.totalBars) * 2}px dotted white`,
         }
     }
 
@@ -155,7 +155,7 @@ const SingleTrackView = (props) => {
                 <Row
                     className="ps-1 pe-1 pt-2 pb-1 d-flex"
                     style={trackAreaStyle}>
-                    {[...Array(props.barNumbers)].map((_, index) => (
+                    {[...Array(props.totalBars)].map((_, index) => (
                         BarComponent(index, props.track.notes)
                     ))}
                 </Row>

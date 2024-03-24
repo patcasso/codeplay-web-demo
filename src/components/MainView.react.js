@@ -6,6 +6,7 @@ import MidiView from "./MidiView.react";
 import TextPromptView from "./TextPromptView.react";
 import ErrorModal from "./ErrorModal.react";
 import TutorialModal from "./TutorialModal.react";
+import InfoModal from "./InfoModal.react";
 
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
@@ -17,6 +18,7 @@ const MainView = () => {
     const [midiBlob, setMidiBlob] = useState();
     const [generateConditions, setGenerateConditions] = useState({});
     const [showErrorModal, setShowErrorModal] = useState(false);
+    const [showInfoModal, setShowInfoModal] = useState(false);
     const [showTutorialModal, setShowTutorialModal] = useState(false);
     const [errorLog, setErrorLog] = useState("Error");
 
@@ -27,6 +29,7 @@ const MainView = () => {
         <>
             <NavigationBar
                 setShowTutorialModal={setShowTutorialModal}
+                setShowInfoModal={setShowInfoModal}
             />
             <Container fluid className="p-4">
                 <Row>
@@ -58,6 +61,10 @@ const MainView = () => {
                 errorLog={errorLog}
                 showErrorModal={showErrorModal}
                 setShowErrorModal={setShowErrorModal}
+            />
+            <InfoModal
+                showInfoModal={showInfoModal}
+                setShowInfoModal={setShowInfoModal}
             />
             <TutorialModal
                 showTutorialModal={showTutorialModal}

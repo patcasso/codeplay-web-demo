@@ -6,27 +6,28 @@ import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Button from 'react-bootstrap/Button'
 
-const TutorialModal = (props) => {
+const InfoModal = (props) => {
 
     return (
         <Modal
-            show={props.showTutorialModal}
-            onHide={() => props.setShowTutorialModal(false)}
+            show={props.showInfoModal}
+            onHide={() => props.setShowInfoModal(false)}
             dialogClassName="error-modal"
         >
             <Modal.Header closeButton>
-                <Modal.Title>Tutorial</Modal.Title>
+                <Modal.Title>Info</Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 <Container>
                     <Row>
-                        <span>Tutorial Content Coming Soon...</span>
+                        <span>Info Content Coming Soon...</span>
+                        <h3>NLP-07 CodePlay 코뿔소 와!!</h3>
                     </Row>
                     <Row className="mt-4 float-end">
                         <Col>
                             <Button
                                 variant="secondary"
-                                onClick={() => { props.setShowTutorialModal(false) }}
+                                onClick={() => { props.setShowInfoModal(false) }}
                             >
                                 Close
                             </Button>
@@ -38,4 +39,4 @@ const TutorialModal = (props) => {
     )
 }
 
-export default TutorialModal;
+export default InfoModal;
