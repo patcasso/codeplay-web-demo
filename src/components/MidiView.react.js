@@ -5,7 +5,6 @@ import Card from 'react-bootstrap/Card';
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col';
 import Button from "react-bootstrap/Button";
-import Spinner from "react-bootstrap/Spinner";
 
 import MultiTrackView from './MultiTrackView.react.js'
 import SampleMidiDropdown from "../utils/SampleMidiDropdown.js";
@@ -49,7 +48,7 @@ const MidiView = (props) => {
     const [addInstNum, setAddInstNum] = useState(999);
     const [regenTrigger, setRegenTrigger] = useState(0);
     const [isAdding, setIsAdding] = useState(false);
-    const [totalBars, setTotalBars] = useState(0);
+    const [totalBars, setTotalBars] = useState(4);
     const [barsToRegen, setBarsToRegen] = useState([0, 3]);
 
     // 서버에서 생성해서 반환해준 미디 파일을 멀티트랙 뷰로 넘겨줌
@@ -95,10 +94,28 @@ const MidiView = (props) => {
     const regenerateSingleInstrument = () => {
         if (midiFile) {
             try {
-                // Index에 해당하는 악기만 빼서 다시 정의
-                const newMidi = midiFile.clone();
-                newMidi.tracks.splice(regenTrackIdx, 1);
-                sendMidiToServerLambda({ operateType: "regen", midi: newMidi, instNum: regenInstNum });
+                let regenPart;
+                let newMidi;
+                if (totalBars === 4) {
+                    console.log("regenerate default")
+                    regenPart = "default";
+
+                    newMidi = midiFile.clone();
+                    newMidi.tracks.splice(regenTrackIdx, 1);
+                } else if (totalBars === 8) {
+                    if (barsToRegen[0] === 0 && barsToRegen[1] === 3) {
+                        console.log(barsToRegen);
+                        regenPart = "front";
+                    } else if (barsToRegen[0] === 4 && barsToRegen[1] === 7) {
+                        console.log(barsToRegen);
+                        regenPart = "back";
+                    }
+                    newMidi = midiFile.clone();
+                    const removedTrack = newMidi.tracks.splice(regenTrackIdx, 1)[0];
+                    newMidi.tracks.push(removedTrack);
+                }
+
+                sendMidiToServerLambda({ operateType: "regen", midi: newMidi, instNum: regenInstNum, regenPart: regenPart });
             } catch (error) {
                 console.error('Error Regenerating Single Instrument:', error)
             }
@@ -106,7 +123,7 @@ const MidiView = (props) => {
     }
 
     // 현재 MIDI File을 서버에 보내고, 추가 혹은 수정된 미디 파일을 받는 함수
-    const sendMidiToServerLambda = ({ operateType, midi, instNum, regenBarIndex }) => {
+    const sendMidiToServerLambda = ({ operateType, midi, instNum, regenBarIndex, regenPart }) => {
         setIsAdding(true);
 
         // Create FormData object
@@ -123,7 +140,8 @@ const MidiView = (props) => {
                 "instnum": instNum,
                 "emotion": props.generateConditions.emotion,
                 "tempo": props.generateConditions.tempo,
-                "genre": props.generateConditions.genre
+                "genre": props.generateConditions.genre,
+                "regenPart": regenPart
             });
         } else if (operateType === "extend") {
             console.log(`Extend Midi to 8 bars`);
@@ -224,8 +242,17 @@ const MidiView = (props) => {
     }
 
     const handleClickAddInst = () => {
+
+        // Server에서 4 bar add인지, 8 bar add인지 구별하게 하는 변수
+        let regenPart;
+        if (totalBars === 4) {
+            regenPart = "default";
+        } else if (totalBars === 8) {
+            regenPart = "both";
+        }
+
         if (addInstNum >= -1 && addInstNum <= 127) {
-            sendMidiToServerLambda({ operateType: "add", midi: midiFile, instNum: addInstNum });
+            sendMidiToServerLambda({ operateType: "add", midi: midiFile, instNum: addInstNum, regenPart: regenPart });
         } else {
             // 특정 악기 정하지 않고 그냥 Add Track하는 경우 예외 처리
             sendMidiToServerLambda({ operateType: "add", midi: midiFile, instNum: 999 });
@@ -308,9 +335,9 @@ const MidiView = (props) => {
                         regenTrackIdx={regenTrackIdx}
                         barsToRegen={barsToRegen}
                         isGenerating={props.isGenerating}
+                        handleClickInfill={handleClickInfill}
                         setTotalBars={setTotalBars}
                         setBarsToRegen={setBarsToRegen}
-                        handleClickInfill={handleClickInfill}
                         setMidiFile={setMidiFile}
                         setRegenTrackIdx={setRegenTrackIdx}
                         setRegenInstNum={setRegenInstNum}
