@@ -3,11 +3,14 @@ import { useState, useEffect } from "react";
 
 import SingleTrackView from './SingleTrackView.react.js'
 
+import Container from "react-bootstrap/Container";
+import Card from "react-bootstrap/Card";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Button from "react-bootstrap/Button";
-import Card from "react-bootstrap/Card";
-import Container from "react-bootstrap/Container";
+import ToggleButton from 'react-bootstrap/ToggleButton';
+import ButtonGroup from "react-bootstrap/ButtonGroup";
+import ToggleButtonGroup from 'react-bootstrap/ToggleButtonGroup';
 
 import Soundfont from "soundfont-player";
 import * as Tone from "tone";
@@ -485,6 +488,35 @@ const MultiTrackView = (props) => {
           >
             {playing ? "PAUSE" : "PLAY 8bit"}
           </Button>
+          <ButtonGroup
+            className="float-end"
+            hidden={props.totalBars === 4}
+          >
+            <ToggleButton
+              key="front"
+              size="sm"
+              type="radio"
+              variant="outline-primary"
+              name="radio"
+              value={1}
+              checked={JSON.stringify(props.barsToRegen) === JSON.stringify([0, 3])}
+              onClick={() => props.setBarsToRegen([0, 3])}
+            >
+              1-4
+            </ToggleButton>
+            <ToggleButton
+              key="back"
+              size="sm"
+              type="radio"
+              variant="outline-primary"
+              name="radio"
+              value={2}
+              checked={JSON.stringify(props.barsToRegen) === JSON.stringify([4, 7])}
+              onClick={() => props.setBarsToRegen([4, 7])}
+            >
+              5-8
+            </ToggleButton>
+          </ButtonGroup>
         </Col>
       </Row>
       <Row className="mt-3" style={{ color: "gray" }}>
@@ -526,7 +558,7 @@ const MultiTrackView = (props) => {
               soloTrack={soloTrack}
               mutedTracks={mutedTracks}
               instrumentTrack={instrumentObject[idx]}
-              barsToRegen={props.barsToRegen}
+              // barsToRegen={props.barsToRegen}
               regenTrackIdx={props.regenTrackIdx}
               isGenerating={props.isGenerating}
               isAdding={props.isAdding}
