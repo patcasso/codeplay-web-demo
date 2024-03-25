@@ -47,12 +47,10 @@ const MainView = () => {
                         arrWidth={arrWidth}
                         midiBlob={midiBlob}
                         isGenerating={isGenerating}
-                        isAdding={isAdding}
                         generateConditions={generateConditions}
                         setMidiBlob={setMidiBlob}
                         setShowErrorModal={setShowErrorModal}
                         setIsGenerating={setIsGenerating}
-                        setIsAdding={setIsAdding}
                         setErrorLog={setErrorLog}
                     />
                 </Row>

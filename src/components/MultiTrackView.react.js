@@ -91,7 +91,7 @@ const MultiTrackView = (props) => {
       setBeatsPerBar(beatsPerBarFromMidi);
       props.setTotalBars(barNumbersFromMidi);
       setBpm(receivedBpm);
-      
+
 
       // instrumentObject 생성
       props.midiFile.tracks.forEach((track, idx) => {
@@ -531,10 +531,10 @@ const MultiTrackView = (props) => {
         </Col>
         <Col xs={9} style={progressBarStyle} className="mb-2 p-0">
           <div style={{ display: 'flex', paddingLeft: "5px" }}>
-            {[...Array(props.totalBars)].map((_, index) => (
+            {midiFile &&[...Array(props.totalBars)].map((_, index) => (
               BarHeaderComponent(index)
             ))}
-          </div>
+          </div> 
           <div style={handleProgressBar()}>▼</div>
         </Col>
         <Col xs={1}>
@@ -560,6 +560,7 @@ const MultiTrackView = (props) => {
               regenTrackIdx={props.regenTrackIdx}
               isGenerating={props.isGenerating}
               isAdding={props.isAdding}
+              isExtending={props.isExtending}
               color={assignTrackColor(idx)}
               handleClickRemove={handleClickRemove}
               handleSoloButton={handleSoloButton}

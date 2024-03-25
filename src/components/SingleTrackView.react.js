@@ -165,7 +165,7 @@ const SingleTrackView = (props) => {
                     size="sm"
                     variant="outline-primary"
                     onClick={handleClickRegenerate}
-                    disabled={props.isGenerating || props.isAdding || props.playing}
+                    disabled={props.isGenerating || props.isAdding || props.playing || props.isExtending}
                     onMouseEnter={() => setHighlightOn(true)}
                     onMouseLeave={() => setHighlightOn(false)}
                 >
