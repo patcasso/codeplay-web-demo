@@ -91,9 +91,7 @@ const MultiTrackView = (props) => {
       setBeatsPerBar(beatsPerBarFromMidi);
       props.setTotalBars(barNumbersFromMidi);
       setBpm(receivedBpm);
-
-
-
+      
 
       // instrumentObject 생성
       props.midiFile.tracks.forEach((track, idx) => {

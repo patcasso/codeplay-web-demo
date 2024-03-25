@@ -208,17 +208,32 @@ const MidiView = (props) => {
                         // props.setMidiBlob(arrayBuffer);
 
                         const midi = new Midi(arrayBuffer)
-                        const lastTrack = midi.tracks[midi.tracks.length - 1]
-                        const newMidi = midiFile.clone()
 
-                        if (regenTrackIdx !== null) {
+                        // operateType에 따라 나눠서 응답 미디 파일 처리
+                        if (operateType === "extend" || operateType === "infill") {
+                            setMidiFile(midi);
+                        } else if (operateType === "add") {
+                            const lastTrack = midi.tracks[midi.tracks.length - 1];
+                            const newMidi = midiFile.clone();
+                            newMidi.tracks.push(lastTrack);
+                            setMidiFile(newMidi);
+                        } else if (operateType === "regen") {
+                            const lastTrack = midi.tracks[midi.tracks.length - 1];
+                            const newMidi = midiFile.clone()
                             newMidi.tracks[regenTrackIdx] = lastTrack;
                             setMidiFile(newMidi);
                             setRegenTrackIdx(null);
-                        } else {
-                            newMidi.tracks.push(lastTrack);
-                            setMidiFile(newMidi);
                         }
+
+
+                        // if (regenTrackIdx !== null) {
+                        //     newMidi.tracks[regenTrackIdx] = lastTrack;
+                        //     setMidiFile(newMidi);
+                        //     setRegenTrackIdx(null);
+                        // } else {
+                        //     newMidi.tracks.push(lastTrack);
+                        //     setMidiFile(newMidi);
+                        // }
                         setIsAdding(false);
 
                         receivedData += value;
