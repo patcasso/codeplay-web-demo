@@ -50,6 +50,8 @@ const MidiView = (props) => {
     const [isAdding, setIsAdding] = useState(false);
     const [totalBars, setTotalBars] = useState(4);
     const [barsToRegen, setBarsToRegen] = useState([0, 3]);
+    const [currentInstruments, setCurrentInstruments] = useState();
+
 
     // 서버에서 생성해서 반환해준 미디 파일을 멀티트랙 뷰로 넘겨줌
     useEffect(() => {
@@ -68,6 +70,20 @@ const MidiView = (props) => {
     useEffect(() => {
         regenerateSingleInstrument();
     }, [regenTrigger])
+
+    // midiFile 갱신되면 현재 어떤 악기들이 있는지 가져오는 함수
+    useEffect(() => {
+        if (midiFile) {
+            const instrumentsArray = [];
+            midiFile.tracks.forEach((track) => {
+                track.instrument.percussion ?
+                    instrumentsArray.push(-1) :
+                    instrumentsArray.push(track.instrument.number);
+            })
+            // console.log(instrumentsArray);
+            setCurrentInstruments(instrumentsArray);
+        }
+    }, [midiFile])
 
     // 드래그 앤 드롭으로 올린 미디 파일을 멀티트랙 뷰로 보내고 서버에 전송 가능한 형태로 준비시킴
     const handleFileDrop = async (event) => {
@@ -388,6 +404,7 @@ const MidiView = (props) => {
                                 <ButtonGroup className="float-end me-2">
                                     <InstListDropdown
                                         addInstNum={addInstNum}
+                                        currentInstruments={currentInstruments}
                                         setAddInstNum={setAddInstNum}
                                     />
                                     <Button

@@ -56,6 +56,7 @@ const InstListDropdown = (props) => {
                     onClick={() => {
                         props.setAddInstNum(-1);
                     }}
+                    disabled={props.currentInstruments.includes(-1)}
                 >
                     <span style={{ display: 'inline-flex', alignItems: 'center' }}>
                         <img src={`./inst_icons/${getIconName(-1)}.png`} width="20px" style={{ marginRight: "5px" }} />
@@ -69,6 +70,7 @@ const InstListDropdown = (props) => {
                         onClick={() => {
                             props.setAddInstNum(parseInt(key));
                         }}
+                        disabled={props.currentInstruments.includes(parseInt(key))}
                     >
                         <span style={{ display: 'inline-flex', alignItems: 'center' }}>
                             <img src={`./inst_icons/${getIconName(parseInt(key))}.png`} width="20px" style={{ marginRight: "5px" }} />
