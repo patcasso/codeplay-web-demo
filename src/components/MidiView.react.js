@@ -291,7 +291,7 @@ const MidiView = (props) => {
             sendMidiToServerLambda({ operateType: "add", midi: midiFile, instNum: addInstNum, regenPart: regenPart });
         } else {
             // 특정 악기 정하지 않고 그냥 Add Track하는 경우 예외 처리
-            sendMidiToServerLambda({ operateType: "add", midi: midiFile, instNum: 999 });
+            sendMidiToServerLambda({ operateType: "add", midi: midiFile, instNum: 999, regenPart: regenPart });
         }
     }
 
