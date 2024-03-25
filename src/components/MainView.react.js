@@ -23,7 +23,7 @@ const MainView = () => {
     const [errorLog, setErrorLog] = useState("Error");
 
     const arrWidth = 12
-    console.log(generateConditions);
+    Object.keys(generateConditions).length && console.log(generateConditions);
 
     return (
         <>
