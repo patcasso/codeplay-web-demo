@@ -50,7 +50,7 @@ const MidiView = (props) => {
     const [isAdding, setIsAdding] = useState(false);
     const [totalBars, setTotalBars] = useState(4);
     const [barsToRegen, setBarsToRegen] = useState([0, 3]);
-    const [currentInstruments, setCurrentInstruments] = useState();
+    const [currentInstruments, setCurrentInstruments] = useState([]);
 
 
     // 서버에서 생성해서 반환해준 미디 파일을 멀티트랙 뷰로 넘겨줌
@@ -416,7 +416,7 @@ const MidiView = (props) => {
                                     </Button>
                                 </ButtonGroup>
                                 <Button
-                                    disabled={totalBars === 8}
+                                    disabled={totalBars === 8 || isAdding}
                                     variant="outline-dark"
                                     className="float-end me-2"
                                     onClick={handleClickExtend}
