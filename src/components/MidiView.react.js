@@ -5,6 +5,7 @@ import Card from 'react-bootstrap/Card';
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col';
 import Button from "react-bootstrap/Button";
+import Spinner from "react-bootstrap/Spinner";
 
 import MultiTrackView from './MultiTrackView.react.js'
 import SampleMidiDropdown from "../utils/SampleMidiDropdown.js";
@@ -48,9 +49,10 @@ const MidiView = (props) => {
     const [addInstNum, setAddInstNum] = useState(999);
     const [regenTrigger, setRegenTrigger] = useState(0);
     const [isAdding, setIsAdding] = useState(false);
+    const [isExtending, setIsExtending] = useState(false);
     const [totalBars, setTotalBars] = useState(4);
     const [barsToRegen, setBarsToRegen] = useState([0, 3]);
-    const [currentInstruments, setCurrentInstruments] = useState();
+    const [currentInstruments, setCurrentInstruments] = useState([]);
 
 
     // 서버에서 생성해서 반환해준 미디 파일을 멀티트랙 뷰로 넘겨줌
@@ -140,7 +142,7 @@ const MidiView = (props) => {
 
     // 현재 MIDI File을 서버에 보내고, 추가 혹은 수정된 미디 파일을 받는 함수
     const sendMidiToServerLambda = ({ operateType, midi, instNum, regenBarIndex, regenPart }) => {
-        setIsAdding(true);
+
 
         // Create FormData object
         const midiArray = midi.toArray()
@@ -159,6 +161,7 @@ const MidiView = (props) => {
                 "genre": props.generateConditions.genre,
                 "regenPart": regenPart
             });
+            setIsAdding(true);
         } else if (operateType === "extend") {
             console.log(`Extend Midi to 8 bars`);
             url = "https://eqipz7j6o7.execute-api.ap-northeast-2.amazonaws.com/default/codeplayExtendMidi"; // AWS API Gateway Endpoint
@@ -228,17 +231,20 @@ const MidiView = (props) => {
                         // operateType에 따라 나눠서 응답 미디 파일 처리
                         if (operateType === "extend" || operateType === "infill") {
                             setMidiFile(midi);
+                            setIsExtending(false);
                         } else if (operateType === "add") {
                             const lastTrack = midi.tracks[midi.tracks.length - 1];
                             const newMidi = midiFile.clone();
                             newMidi.tracks.push(lastTrack);
                             setMidiFile(newMidi);
+                            setIsAdding(false);
                         } else if (operateType === "regen") {
                             const lastTrack = midi.tracks[midi.tracks.length - 1];
                             const newMidi = midiFile.clone()
                             newMidi.tracks[regenTrackIdx] = lastTrack;
                             setMidiFile(newMidi);
                             setRegenTrackIdx(null);
+                            setIsAdding(false);
                         }
 
 
@@ -268,7 +274,6 @@ const MidiView = (props) => {
             .catch(error => {
                 props.setShowErrorModal(true);
                 props.setErrorLog(error.message);
-                setIsAdding(false)
             });
     }
 
@@ -292,6 +297,7 @@ const MidiView = (props) => {
 
     const handleClickExtend = () => {
         sendMidiToServerLambda({ operateType: "extend", midi: midiFile });
+        setIsExtending(true);
     }
 
     const handleClickInfill = (barIndex) => {
@@ -365,6 +371,7 @@ const MidiView = (props) => {
                         isAdding={isAdding}
                         regenTrackIdx={regenTrackIdx}
                         barsToRegen={barsToRegen}
+                        isExtending={isExtending}
                         isGenerating={props.isGenerating}
                         handleClickInfill={handleClickInfill}
                         setTotalBars={setTotalBars}
@@ -410,18 +417,29 @@ const MidiView = (props) => {
                                     <Button
                                         variant="outline-primary"
                                         onClick={handleClickAddInst}
-                                        disabled={props.isGenerating || isAdding}
+                                        disabled={props.isGenerating || isAdding || isExtending}
                                     >
                                         {isAdding ? "Adding..." : "Add Inst"}
                                     </Button>
                                 </ButtonGroup>
                                 <Button
-                                    disabled={totalBars === 8}
+                                    disabled={totalBars === 8 || isExtending || isAdding}
                                     variant="outline-dark"
                                     className="float-end me-2"
                                     onClick={handleClickExtend}
                                 >
-                                    Extend to 8 bars (+)
+                                    {isExtending ? "Extending..." : "Extend to 8 bars (+)"}
+                                    <Spinner
+                                        // size="sm"
+                                        className="m-0 p-0"
+                                        // style={{ width: '0.8rem', height: '0.8rem', borderWidth: '2px' }}
+                                        style={{ width: '0.8rem', height: '0.8rem', borderWidth: '2px', marginLeft: '5px', display: isExtending ? 'inline-block' : 'none' }}
+                                        variant="dark"
+                                        animation="border"
+                                        role="status"
+                                    >
+                                        <span className="visually-hidden">Loading...</span>
+                                    </Spinner>
                                 </Button>
                             </Col>
                         </Row> : null
